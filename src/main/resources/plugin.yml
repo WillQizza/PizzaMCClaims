@@ -1,0 +1,5 @@
+name: PizzaMCClaims
+description: Designed for SMPs for players to claim and share land
+version: 1.0.0
+main: io.github.willqi.pizzamc.claims.ClaimsPlugin
+author: William Qi
