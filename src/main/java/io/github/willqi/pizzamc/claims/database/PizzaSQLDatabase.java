@@ -18,6 +18,10 @@ public class PizzaSQLDatabase {
         createConnection(host, port, database, username, password);
     }
 
+    public Connection getConnection () {
+        return connection;
+    }
+
     private void createConnection (final String host, final int port, final String database, final String username, final String password) {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
