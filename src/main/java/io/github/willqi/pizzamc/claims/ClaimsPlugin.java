@@ -15,8 +15,15 @@ public class ClaimsPlugin extends JavaPlugin {
     public void onEnable() {
 
         saveDefaultConfig();
-
         registerEvents();
+
+        database = new PizzaSQLDatabase(
+            getConfig().getString("host"),
+            getConfig().getInt("port"),
+            getConfig().getString("database"),
+            getConfig().getString("username"),
+            getConfig().getString("password")
+        );
     }
 
     public ClaimsManager getClaimsManager () {
