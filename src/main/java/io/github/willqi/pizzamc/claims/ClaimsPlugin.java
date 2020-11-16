@@ -8,7 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class ClaimsPlugin extends JavaPlugin {
 
-    private final ClaimsManager claimsManager = new ClaimsManager();
+    private ClaimsManager claimsManager;
     private PizzaSQLDatabase database;
 
     @Override
@@ -24,6 +24,7 @@ public class ClaimsPlugin extends JavaPlugin {
             getConfig().getString("username"),
             getConfig().getString("password")
         );
+        claimsManager = new ClaimsManager(this);
     }
 
     public ClaimsManager getClaimsManager () {
@@ -37,7 +38,7 @@ public class ClaimsPlugin extends JavaPlugin {
     private void registerEvents () {
 
         getServer().getPluginManager().registerEvents(new ChunkClaimStorageListener(), this);
-        getServer().getPluginManager().registerEvents(new PlayerChunkProtectionListener(), this);;
+        getServer().getPluginManager().registerEvents(new PlayerChunkProtectionListener(), this);
 
     }
 
