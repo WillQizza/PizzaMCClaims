@@ -14,7 +14,7 @@ public class ClaimsPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
 
-
+        saveDefaultConfig();
 
         registerEvents();
     }
