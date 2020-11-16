@@ -1,0 +1,10 @@
+# Database connection
+host:
+port:
+database:
+username:
+password:
+
+# -1 for infinity
+max_claims_per_player: -1
+max_homes_per_player: -1
