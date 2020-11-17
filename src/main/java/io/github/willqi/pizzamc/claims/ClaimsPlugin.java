@@ -1,6 +1,7 @@
 package io.github.willqi.pizzamc.claims;
 
-import io.github.willqi.pizzamc.claims.api.ClaimsManager;
+import io.github.willqi.pizzamc.claims.api.claims.ClaimsManager;
+import io.github.willqi.pizzamc.claims.api.homes.HomesManager;
 import io.github.willqi.pizzamc.claims.database.PizzaSQLDatabase;
 import io.github.willqi.pizzamc.claims.listeners.ChunkClaimStorageListener;
 import io.github.willqi.pizzamc.claims.listeners.PlayerChunkProtectionListener;
@@ -9,6 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class ClaimsPlugin extends JavaPlugin {
 
     private ClaimsManager claimsManager;
+    private HomesManager homesManager;
     private PizzaSQLDatabase database;
 
     @Override
@@ -25,6 +27,7 @@ public class ClaimsPlugin extends JavaPlugin {
             getConfig().getString("password")
         );
         claimsManager = new ClaimsManager(this);
+        homesManager = new HomesManager(this);
     }
 
     public ClaimsManager getClaimsManager () {
