@@ -5,6 +5,9 @@ import org.bukkit.OfflinePlayer;
 
 public class ClaimHelper implements SaveableObject {
 
+    /**
+     * Permissions for the helper.
+     */
     public enum Permissions {
 
         ADMIN(generateValue(0)),
@@ -35,22 +38,42 @@ public class ClaimHelper implements SaveableObject {
     private int permissions = 0;
     private boolean wasModified = false;
 
+    /**
+     * Constructor for claim helper
+     * @param id
+     * @param player
+     * @param permissions
+     */
     public ClaimHelper (int id, OfflinePlayer player, int permissions) {
         this.id = id;
         this.player = player;
         this.permissions = permissions;
     }
 
+    /**
+     * Get the claim helper player
+     * @return the player equiv of the helper
+     */
     public OfflinePlayer getPlayer () {
         return player;
     }
 
+    /**
+     * Set the permissions for the helper
+     * @param permissions
+     * @return the helper
+     */
     public ClaimHelper setPermissions (int permissions) {
         this.permissions = permissions;
         wasModified = true;
         return this;
     }
 
+    /**
+     * Add a permission to the helper
+     * @param permission
+     * @return the helper
+     */
     public ClaimHelper addPermission (Permissions permission) {
         if ((permissions & permission.getValue()) == 0) {
             permissions += permission.getValue();
@@ -59,6 +82,11 @@ public class ClaimHelper implements SaveableObject {
         return this;
     }
 
+    /**
+     * Remove a permission to the helper
+     * @param permission
+     * @return the helper
+     */
     public ClaimHelper removePermission (Permissions permission) {
         if ((permissions & permission.getValue()) != 0) {
             permissions -= permission.getValue();
@@ -67,6 +95,11 @@ public class ClaimHelper implements SaveableObject {
         return this;
     }
 
+    /**
+     * Check if a helper has a permission
+     * @param permission
+     * @return If the helper has the permission
+     */
     public boolean hasPermission (Permissions permission) {
         return (permissions & permission.getValue()) != 0;
     }

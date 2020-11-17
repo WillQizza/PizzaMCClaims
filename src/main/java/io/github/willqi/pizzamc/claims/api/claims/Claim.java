@@ -9,6 +9,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Claim implements SaveableObject {
 
+    /**
+     * Features of the claim
+     */
     public enum Flags {
         ALWAYS_DAY(generateValue(0)),       // Is it always day?
         MOB_SPAWNING(generateValue(1)),     // Can mobs spawn?
@@ -71,37 +74,72 @@ public class Claim implements SaveableObject {
         this.helpers = new CopyOnWriteArrayList<>(helpers);
     }
 
+    /**
+     * Retrieve the claim id
+     * @return chunk id
+     */
     public int getId () {
         return id;
     }
 
+    /**
+     * Retrieve the chunk x
+     * @return chunk x
+     */
     public int getX () {
         return x;
     }
 
+    /**
+     * Retrieve the chunk z
+     * @return chunk z
+     */
     public int getZ () {
         return z;
     }
 
+    /**
+     * Retrieve the owner of the claim
+     * @return The owner if the chunk is claimed.
+     */
     public Optional<OfflinePlayer> getOwner () {
         return Optional.empty();
     }
 
+    /**
+     * Retrieve all of the helpers of the claim
+     * @return A list of helpers who have permissions in this claim
+     */
     public List<ClaimHelper> getHelpers () {
         return helpers;
     }
 
+    /**
+     * Set the owner of the claim
+     * @param player
+     * @return the claim
+     */
     public Claim setOwner (OfflinePlayer player) {
         owner = player;
         wasModified = true;
         return this;
     }
 
+    /**
+     * Set the claim flags
+     * @param flags
+     * @return the claim
+     */
     public Claim setFlags (int flags) {
         this.flags = flags;
         return this;
     }
 
+    /**
+     * Add a flag to the claim
+     * @param flag
+     * @return the claim
+     */
     public Claim addFlag (Flags flag) {
         if ((flags & flag.getValue()) == 0) {
             flags += flag.getValue();
@@ -110,6 +148,11 @@ public class Claim implements SaveableObject {
         return this;
     }
 
+    /**
+     * Remove a flag from the claim
+     * @param flag
+     * @return the claim
+     */
     public Claim removeFlag (Flags flag) {
         if ((flags & flag.getValue()) != 0) {
             flags -= flag.getValue();
@@ -118,6 +161,12 @@ public class Claim implements SaveableObject {
         return this;
     }
 
+
+    /**
+     * Check if a claim has a flag
+     * @param flag
+     * @return if the claim has the flag
+     */
     public boolean hasFlag (Flags flag) {
         return (flags & flag.getValue()) != 0;
     }
