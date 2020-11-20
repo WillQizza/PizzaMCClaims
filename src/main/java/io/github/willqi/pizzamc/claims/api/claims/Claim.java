@@ -5,6 +5,7 @@ import org.bukkit.OfflinePlayer;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Claim implements SaveableObject {
@@ -36,6 +37,7 @@ public class Claim implements SaveableObject {
     private final int x;
     private final int z;
     private final int id;
+    private final UUID levelUUID;
 
     private int flags = 0;
     private boolean claimed = false;
@@ -49,8 +51,9 @@ public class Claim implements SaveableObject {
      * @param x Chunk X
      * @param z Chunk Z
      */
-    public Claim (int id, int x, int z) {
+    public Claim (int id, UUID levelUUID, int x, int z) {
         this.id = id;
+        this.levelUUID = levelUUID;
         this.x = x;
         this.z = z;
         this.helpers = new CopyOnWriteArrayList<>();
@@ -65,8 +68,9 @@ public class Claim implements SaveableObject {
      * @param flags Flags of the chunk
      * @param helpers Other players with permissions in the chunk
      */
-    public Claim (int id, int x, int z, OfflinePlayer owner, int flags, List<ClaimHelper> helpers) {
+    public Claim (int id, UUID levelUUID, int x, int z, OfflinePlayer owner, int flags, List<ClaimHelper> helpers) {
         this.id = id;
+        this.levelUUID = levelUUID;
         this.x = x;
         this.z = z;
         this.owner = owner;
@@ -80,6 +84,14 @@ public class Claim implements SaveableObject {
      */
     public int getId () {
         return id;
+    }
+
+    /**
+     * Retrieve the level UUID
+     * @return level uuid
+     */
+    public UUID getLevelUUID () {
+        return levelUUID;
     }
 
     /**
