@@ -20,6 +20,7 @@ public class HomesManager {
 
     private static final String CREATE_HOMES_TABLES = "CREATE TABLE IF NOT EXISTS homes (" +
             "id INT PRIMARY KEY," +
+            "level VAR(36)," +                      // UUID of the level
             "x INT," +                              // x position
             "y INT," +                              // y position
             "z INT," +                              // z position

@@ -20,18 +20,17 @@ public class ClaimsManager {
 
     private static final String CREATE_CLAIMS_TABLE = "CREATE TABLE IF NOT EXISTS claims (" +
                                                         "id INT PRIMARY KEY," +
+                                                        "level VARCHAR(36) ," +                // UUID of the level
                                                         "x INT," +                             // Chunk X
                                                         "y INT," +                             // Chunk Y
                                                         "flags INT," +                         // Extra features for the chunk
-                                                        "player VARCHAR(36)" +                   // UUID of the owner of the chunk
+                                                        "player VARCHAR(36)" +                 // UUID of the owner of the chunk
                                                         ")";
     private static final String CREATE_CHUNK_HELPERS_TABLES = "CREATE TABLE IF NOT EXISTS claim_helpers (" +
-                                                                "id INT PRIMARY KEY," +
-                                                                "x INT," +                      // Chunk X
-                                                                "y INT," +                      // Chunk Y
-                                                                "permissions INT," +             // Permissions the helper has.
-                                                                "player VARCHAR(36)" +          // UUID of the owner of the chunk
-                                                                ")";
+                                                        "claim_id INT," +               // Corresponding claim id
+                                                        "permissions INT," +            // Permissions the helper has.
+                                                        "player VARCHAR(36)" +          // UUID of the owner of the chunk
+                                                        ")";
 
     private final ClaimsPlugin plugin;
 
