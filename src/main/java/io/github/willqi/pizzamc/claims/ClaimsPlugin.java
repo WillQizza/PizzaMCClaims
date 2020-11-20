@@ -2,16 +2,28 @@ package io.github.willqi.pizzamc.claims;
 
 import io.github.willqi.pizzamc.claims.api.claims.ClaimsManager;
 import io.github.willqi.pizzamc.claims.api.homes.HomesManager;
+import io.github.willqi.pizzamc.claims.api.homes.exceptions.InvalidHomeNameException;
 import io.github.willqi.pizzamc.claims.database.PizzaSQLDatabase;
 import io.github.willqi.pizzamc.claims.listeners.ChunkClaimStorageListener;
+import io.github.willqi.pizzamc.claims.listeners.HomeListener;
 import io.github.willqi.pizzamc.claims.listeners.PlayerChunkProtectionListener;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.UUID;
+import java.util.logging.Level;
 
 public class ClaimsPlugin extends JavaPlugin {
 
     private ClaimsManager claimsManager;
     private HomesManager homesManager;
     private PizzaSQLDatabase database;
+
+    @Override
+    public void onDisable() {
+        if (homesManager != null) {
+            homesManager.cleanUp();
+        }
+    }
 
     @Override
     public void onEnable() {
@@ -34,6 +46,10 @@ public class ClaimsPlugin extends JavaPlugin {
         return claimsManager;
     }
 
+    public HomesManager getHomesManager () {
+        return homesManager;
+    }
+
     public PizzaSQLDatabase getDatabase () {
         return database;
     }
@@ -42,6 +58,7 @@ public class ClaimsPlugin extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new ChunkClaimStorageListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerChunkProtectionListener(), this);
+        getServer().getPluginManager().registerEvents(new HomeListener(this), this);
 
     }
 

@@ -19,7 +19,7 @@ import java.util.logging.Level;
 public class ClaimsManager {
 
     private static final String CREATE_CLAIMS_TABLE = "CREATE TABLE IF NOT EXISTS claims (" +
-                                                        "id INT PRIMARY KEY," +
+                                                        "id INT PRIMARY KEY AUTO_INCREMENT," +
                                                         "level VARCHAR(36) ," +                // UUID of the level
                                                         "x INT," +                             // Chunk X
                                                         "y INT," +                             // Chunk Y
@@ -27,6 +27,7 @@ public class ClaimsManager {
                                                         "player VARCHAR(36)" +                 // UUID of the owner of the chunk
                                                         ")";
     private static final String CREATE_CHUNK_HELPERS_TABLES = "CREATE TABLE IF NOT EXISTS claim_helpers (" +
+                                                        "id INT PRIMARY KEY AUTO_INCREMENT," +
                                                         "claim_id INT," +               // Corresponding claim id
                                                         "permissions INT," +            // Permissions the helper has.
                                                         "player VARCHAR(36)" +          // UUID of the owner of the chunk
