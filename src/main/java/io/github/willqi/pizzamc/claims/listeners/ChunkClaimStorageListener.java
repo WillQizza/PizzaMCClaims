@@ -1,23 +1,24 @@
 package io.github.willqi.pizzamc.claims.listeners;
 
+import io.github.willqi.pizzamc.claims.ClaimsPlugin;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.world.ChunkLoadEvent;
-import org.bukkit.event.world.ChunkUnloadEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 /**
  * Listener responsible for loading/unloading chunk data.
  */
 public class ChunkClaimStorageListener implements Listener {
 
-    @EventHandler
-    public void onChunkLoad (ChunkLoadEvent event) {
-        // Load chunk from database.
+    private final ClaimsPlugin plugin;
+
+    public ChunkClaimStorageListener (final ClaimsPlugin plugin) {
+        this.plugin = plugin;
     }
 
     @EventHandler
-    public void onChunkUnload (ChunkUnloadEvent event) {
-        // Unload chunk data from memory and save changes.
+    public void onChat (AsyncPlayerChatEvent event) {
+        plugin.getClaimsManager().getClaim(event.getPlayer().getLocation().getChunk()).setOwner(event.getPlayer());
     }
 
 }

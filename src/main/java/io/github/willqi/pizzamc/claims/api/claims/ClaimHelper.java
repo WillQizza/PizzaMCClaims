@@ -1,9 +1,18 @@
 package io.github.willqi.pizzamc.claims.api.claims;
 
+import io.github.willqi.pizzamc.claims.ClaimsPlugin;
 import io.github.willqi.pizzamc.claims.database.SaveableObject;
 import org.bukkit.OfflinePlayer;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+
 public class ClaimHelper implements SaveableObject {
+
+    private static final String SAVE_QUERY = "REPLACE INTO claim_helpers (id, claim_id, permissions, player) VALUES (?, ?, ?, ?)";
+    private static final String DELETE_QUERY = "DELETE FROM claim_helpers WHERE id=?";
 
     /**
      * Permissions for the helper.
@@ -16,9 +25,9 @@ public class ClaimHelper implements SaveableObject {
         BUILD(generateValue(3)),
         INTERACT(generateValue(4));
 
-        private int value;
+        private final int value;
 
-        Permissions (int value) {
+        Permissions (final int value) {
             this.value = value;
         }
 
@@ -26,28 +35,41 @@ public class ClaimHelper implements SaveableObject {
             return value;
         }
 
-        private static int generateValue (int index) {
+        private static int generateValue (final int index) {
             return (int)Math.pow(2, index);
         }
 
     }
 
     private final int id;
+    private final int claimId;
     private final OfflinePlayer player;
 
-    private int permissions = 0;
+    private AtomicInteger permissions = new AtomicInteger(0);
     private boolean wasModified = false;
+    private boolean destroyed = false;
 
     /**
      * Constructor for claim helper
      * @param id
+     * @param claimId
      * @param player
      * @param permissions
      */
-    public ClaimHelper (int id, OfflinePlayer player, int permissions) {
+    public ClaimHelper (final int id, final int claimId, final OfflinePlayer player, final int permissions, final boolean fromDatabase) {
         this.id = id;
+        this.claimId = claimId;
         this.player = player;
-        this.permissions = permissions;
+        this.permissions = new AtomicInteger(permissions);
+        this.wasModified = !fromDatabase;
+    }
+
+    /**
+     * Get the claim id
+     * @return the id of the claim
+     */
+    public int getClaimId () {
+        return claimId;
     }
 
     /**
@@ -63,8 +85,9 @@ public class ClaimHelper implements SaveableObject {
      * @param permissions
      * @return the helper
      */
-    public ClaimHelper setPermissions (int permissions) {
-        this.permissions = permissions;
+    public ClaimHelper setPermissions (final int permissions) {
+        final int ogVal = this.permissions.get();
+        this.permissions.compareAndSet(ogVal, ogVal + permissions);
         wasModified = true;
         return this;
     }
@@ -74,9 +97,10 @@ public class ClaimHelper implements SaveableObject {
      * @param permission
      * @return the helper
      */
-    public ClaimHelper addPermission (Permissions permission) {
-        if ((permissions & permission.getValue()) == 0) {
-            permissions += permission.getValue();
+    public ClaimHelper addPermission (final Permissions permission) {
+        final int ogVal = this.permissions.get();
+        if ((permissions.get() & permission.getValue()) == 0) {
+            permissions.compareAndSet(ogVal, ogVal + permission.getValue());
             wasModified = true;
         }
         return this;
@@ -87,9 +111,10 @@ public class ClaimHelper implements SaveableObject {
      * @param permission
      * @return the helper
      */
-    public ClaimHelper removePermission (Permissions permission) {
-        if ((permissions & permission.getValue()) != 0) {
-            permissions -= permission.getValue();
+    public ClaimHelper removePermission (final Permissions permission) {
+        final int ogVal = permissions.get();
+        if ((permissions.get() & permission.getValue()) != 0) {
+            permissions.compareAndSet(ogVal, ogVal - permission.getValue());
             wasModified = true;
         }
         return this;
@@ -100,10 +125,16 @@ public class ClaimHelper implements SaveableObject {
      * @param permission
      * @return If the helper has the permission
      */
-    public boolean hasPermission (Permissions permission) {
-        return (permissions & permission.getValue()) != 0;
+    public boolean hasPermission (final Permissions permission) {
+        return (permissions.get() & permission.getValue()) != 0;
     }
 
+
+    public void destroy () {
+        destroyed = true;
+        permissions.set(0);
+        wasModified = true;
+    }
 
     @Override
     public boolean isModified() {
@@ -113,5 +144,31 @@ public class ClaimHelper implements SaveableObject {
     @Override
     public void save() {
 
+        final ClaimsPlugin plugin = ClaimsPlugin.getPlugin(ClaimsPlugin.class);
+        synchronized (plugin.getDatabase().getConnection()) {
+            PreparedStatement stmt = null;
+            try {
+                if (destroyed || permissions.get() == 0) {
+                    stmt = plugin.getDatabase().getConnection().prepareStatement(DELETE_QUERY);
+                    stmt.setInt(1, id);
+                } else {
+                    stmt = plugin.getDatabase().getConnection().prepareStatement(SAVE_QUERY);
+                    stmt.setInt(1, id);
+                    stmt.setInt(2, claimId);
+                    stmt.setInt(3, permissions.get());
+                    stmt.setString(4, player.getUniqueId().toString());
+                }
+                stmt.execute();
+            } catch (SQLException exception) {
+                plugin.getLogger().log(Level.WARNING, "Failed to save claim helper data id: " + id);
+            } finally {
+                if (stmt != null) {
+                    try {
+                        stmt.close();
+                    } catch (SQLException exception) {}
+                }
+            }
+
+        }
     }
 }

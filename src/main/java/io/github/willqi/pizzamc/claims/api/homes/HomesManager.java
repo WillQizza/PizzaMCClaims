@@ -3,7 +3,6 @@ package io.github.willqi.pizzamc.claims.api.homes;
 import io.github.willqi.pizzamc.claims.ClaimsPlugin;
 import io.github.willqi.pizzamc.claims.api.homes.exceptions.HomesNotLoadedException;
 import io.github.willqi.pizzamc.claims.api.homes.exceptions.InvalidHomeNameException;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.sql.PreparedStatement;
@@ -50,7 +49,7 @@ public class HomesManager {
      * Load all homes owned by a player
      * @param player
      */
-    public void loadHomes (final OfflinePlayer player) {
+    public void loadHomes (final Player player) {
         loadHomes(player.getUniqueId());
     }
 
@@ -71,7 +70,7 @@ public class HomesManager {
                             while (results.next()) {
                                 final Home home = new Home(
                                         results.getInt("id"),
-                                        plugin.getServer().getOfflinePlayer(UUID.fromString(results.getString("player"))),
+                                        plugin.getServer().getPlayer(uuid),
                                         UUID.fromString(results.getString("level")),
                                         results.getString("name"),
                                         results.getInt("x"),
@@ -101,7 +100,7 @@ public class HomesManager {
      * Unload all the homes owned by a player
      * @param player
      */
-    public void unloadHomes (final OfflinePlayer player) {
+    public void unloadHomes (final Player player) {
         unloadHomes(player.getUniqueId());
     }
 
@@ -123,7 +122,7 @@ public class HomesManager {
      * @param player
      * @return if it has
      */
-    public boolean hasHomesLoaded (final OfflinePlayer player) {
+    public boolean hasHomesLoaded (final Player player) {
         return hasHomesLoaded(player.getUniqueId());
     }
 
@@ -141,7 +140,7 @@ public class HomesManager {
      * @param player
      * @return A map of all the homes owned by a player indexed by their house name.
      */
-    public NavigableMap<Integer, Home> getHomes (final OfflinePlayer player) throws HomesNotLoadedException {
+    public NavigableMap<Integer, Home> getHomes (final Player player) throws HomesNotLoadedException {
         return getHomes(player.getUniqueId());
     }
 
