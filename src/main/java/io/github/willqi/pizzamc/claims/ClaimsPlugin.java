@@ -3,7 +3,6 @@ package io.github.willqi.pizzamc.claims;
 import io.github.willqi.pizzamc.claims.api.claims.ClaimsManager;
 import io.github.willqi.pizzamc.claims.api.homes.HomesManager;
 import io.github.willqi.pizzamc.claims.database.PizzaSQLDatabase;
-import io.github.willqi.pizzamc.claims.listeners.ChunkClaimStorageListener;
 import io.github.willqi.pizzamc.claims.listeners.HomeListener;
 import io.github.willqi.pizzamc.claims.listeners.PlayerChunkProtectionListener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -55,7 +54,6 @@ public class ClaimsPlugin extends JavaPlugin {
 
     private void registerEvents () {
 
-        getServer().getPluginManager().registerEvents(new ChunkClaimStorageListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerChunkProtectionListener(), this);
         getServer().getPluginManager().registerEvents(new HomeListener(this), this);
 
