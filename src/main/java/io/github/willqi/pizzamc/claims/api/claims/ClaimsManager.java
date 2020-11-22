@@ -20,7 +20,7 @@ public class ClaimsManager {
 
     private static final String CREATE_CLAIMS_TABLE = "CREATE TABLE IF NOT EXISTS claims (" +
                                                         "id INT PRIMARY KEY," +
-                                                        "level VARCHAR(36) ," +                // UUID of the level
+                                                        "level VARCHAR(36)," +                // UUID of the level
                                                         "x INT," +                             // Chunk X
                                                         "z INT," +                             // Chunk Y
                                                         "flags INT," +                         // Extra features for the chunk

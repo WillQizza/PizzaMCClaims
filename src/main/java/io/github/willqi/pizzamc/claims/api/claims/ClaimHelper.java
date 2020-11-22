@@ -51,10 +51,11 @@ public class ClaimHelper implements SaveableObject {
 
     /**
      * Constructor for claim helper
-     * @param id
-     * @param claimId
-     * @param player
-     * @param permissions
+     * @param id Id of the claim helper
+     * @param claimId Claim id
+     * @param player the helper
+     * @param permissions the permissions of the helper
+     * @param fromDatabase Whether this obj was created from a database entry
      */
     public ClaimHelper (final int id, final int claimId, final OfflinePlayer player, final int permissions, final boolean fromDatabase) {
         this.id = id;

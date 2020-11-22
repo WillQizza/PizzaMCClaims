@@ -29,7 +29,7 @@ public class Claim implements SaveableObject {
 
         private final int value;
 
-        Flags (int value) {
+        Flags (final int value) {
             this.value = value;
         }
 
@@ -44,14 +44,13 @@ public class Claim implements SaveableObject {
 
     private final int x;
     private final int z;
-    private Optional<Integer> id;
     private final UUID levelUUID;
     private final List<ClaimHelper> helpers;
     private final AtomicInteger flags;
 
     private boolean claimed = false;
     private boolean wasModified = false;
-    private boolean loaded = false;
+    private Optional<Integer> id;
     private OfflinePlayer owner = null;
 
     /**
@@ -73,6 +72,7 @@ public class Claim implements SaveableObject {
     /**
      * Constructor for data from the database
      * @param id Claim id in the database.
+     * @param levelUUID UUID of the level
      * @param x Chunk X
      * @param z Chunk Z
      * @param owner Owner of the chunk
@@ -216,22 +216,6 @@ public class Claim implements SaveableObject {
      */
     public boolean hasFlag (final Flags flag) {
         return (flags.get() & flag.getValue()) != 0;
-    }
-
-    /**
-     * Whether or not the claim's chunk is loaded into the world
-     * @return if it is
-     */
-    public boolean isLoaded () {
-        return loaded;
-    }
-
-    /**
-     * Set the status of a claim's chunk
-     * @param status
-     */
-    public void setLoaded (final boolean status) {
-        loaded = status;
     }
 
     @Override
