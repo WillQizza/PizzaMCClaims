@@ -93,6 +93,10 @@ public class Home implements SaveableObject {
         return name;
     }
 
+    public boolean isDestroyed () {
+        return destroyed;
+    }
+
     /**
      * Destroy the home.
      */
