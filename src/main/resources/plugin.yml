@@ -3,3 +3,14 @@ description: Designed for SMPs for players to claim and share land
 version: 1.0.0
 main: io.github.willqi.pizzamc.claims.ClaimsPlugin
 author: William Qi
+
+commands:
+  home:
+    aliases: h
+    description: Create and manage your homes!
+    permission: pizzamcclaims.commands.home
+
+permissions:
+  pizzamcclaims.commands.home:
+    default: op
+    description: Gives access to /home

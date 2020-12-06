@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.logging.Level;
 
 /**
@@ -38,7 +37,7 @@ public class HomesManager {
 
     private int HOME_ID = 0;
 
-    private Map<UUID, NavigableMap<Integer, Home>> homes = new ConcurrentHashMap<>();
+    private Map<UUID, Map<String, Home>> homes = new ConcurrentHashMap<>();
 
     public HomesManager (final ClaimsPlugin plugin) {
         this.plugin = plugin;
@@ -61,7 +60,7 @@ public class HomesManager {
         plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
                 synchronized (plugin.getDatabase().getConnection()) {
                     if (!homes.containsKey(uuid)) {
-                        final NavigableMap<Integer, Home> playerHomes = new ConcurrentSkipListMap<>();
+                        final Map<String, Home> playerHomes = new ConcurrentHashMap<>();
                         PreparedStatement stmt = null;
                         try {
                             stmt = plugin.getDatabase().getConnection().prepareStatement(SELECT_HOMES_OF_UUID);
@@ -78,7 +77,7 @@ public class HomesManager {
                                         results.getInt("z"),
                                         true
                                 );
-                                playerHomes.put(home.getId(), home);
+                                playerHomes.put(home.getName().toLowerCase(), home);
                             }
                         } catch (SQLException exception) {
                             plugin.getServer().getLogger().log(Level.WARNING, "Failed to fetch homes for UUID: " + uuid);
@@ -139,8 +138,9 @@ public class HomesManager {
      * Retrieve all the homes owned by a player
      * @param player
      * @return A map of all the homes owned by a player indexed by their house name.
+     * @throws HomesNotLoadedException If the data was not loaded from the database
      */
-    public NavigableMap<Integer, Home> getHomes (final Player player) throws HomesNotLoadedException {
+    public Map<String, Home> getHomes (final Player player) throws HomesNotLoadedException {
         return getHomes(player.getUniqueId());
     }
 
@@ -148,8 +148,9 @@ public class HomesManager {
      * Retrieve all the homes owned by a player
      * @param uuid
      * @return A map of all the homes owned by a player indexed by their house name.
+     * @throws HomesNotLoadedException If the data was not loaded from the database
      */
-    public NavigableMap<Integer, Home> getHomes (final UUID uuid) throws HomesNotLoadedException {
+    public Map<String, Home> getHomes (final UUID uuid) throws HomesNotLoadedException {
 
         if (!hasHomesLoaded(uuid)) {
             throw new HomesNotLoadedException(
@@ -157,13 +158,54 @@ public class HomesManager {
             );
         }
 
-        return homes.get(uuid);
+        final Map<String, Home> currentHomes = new HashMap<>();
+        for (final Map.Entry<String, Home> entry : homes.get(uuid).entrySet()) {
+            if (!entry.getValue().isDestroyed()) {
+                currentHomes.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return currentHomes;
+    }
+
+    /**
+     * Retrieve a home owned by a player
+     * @param player the player
+     * @param name name of the home
+     * @return an Optional that contains the home if it exists.
+     * @throws HomesNotLoadedException If the data was not loaded from the database
+     */
+    public Optional<Home> getHome (final Player player, final String name) throws HomesNotLoadedException {
+        return getHome(player.getUniqueId(), name);
+    }
+
+    /**
+     * Retrieve a home owned by a player
+     * @param uuid the UUID of the player
+     * @param name name of the home
+     * @return an Optional that contains the home if it exists.
+     * @throws HomesNotLoadedException If the data was not loaded from the database
+     */
+    public Optional<Home> getHome (final UUID uuid, final String name) throws HomesNotLoadedException {
+
+        if (!hasHomesLoaded(uuid)) {
+            throw new HomesNotLoadedException(
+                    String.format("Data was not loaded for %s when fetching homes.", uuid)
+            );
+        }
+
+        final Map<String, Home> homes = getHomes(uuid);
+        if (homes.containsKey(name.toLowerCase())) {
+            return homes.get(name.toLowerCase()).isDestroyed() ? Optional.empty() : Optional.of(homes.get(name.toLowerCase()));
+        }
+        return Optional.empty();
     }
 
     /**
      * Check if a player with loaded data can create new homes
      * @param player The player
-     * @return
+     * @return if the player can create a home
+     * @throws HomesNotLoadedException If the data was not loaded from the database
      */
     public boolean canCreateHome (final Player player) throws HomesNotLoadedException {
 
@@ -177,26 +219,40 @@ public class HomesManager {
         if (maxHomes == -1) {
             return true; // Infinity
         }
-        final NavigableMap<Integer, Home> playerHomesAmount = getHomes(player);
+        final Map<String, Home> playerHomesAmount = getHomes(player);
         return playerHomesAmount.keySet().size() < maxHomes;
     }
 
     /**
      * Creates a home
-     * @param player
-     * @param name
+     * @param player the player
+     * @param name the name of the home
+     * @throws HomesNotLoadedException If the data was not loaded from the database
+     * @throws InvalidHomeNameException If the name of the home is illegal.
      */
     public void createHome (final Player player, final String name) throws HomesNotLoadedException, InvalidHomeNameException {
 
         if (!hasHomesLoaded(player)) {
             throw new HomesNotLoadedException(
-                    String.format("Tried to create a home for %s before data was loaded.", player.getUniqueId())
+                    String.format("Tried to create a home for %s before data was loaded", player.getUniqueId())
             );
         }
 
         if (name.length() > HOME_NAME_LENGTH) {
             throw new InvalidHomeNameException(
                     String.format("Homes cannot be longer than %s characters", HOME_NAME_LENGTH)
+            );
+        }
+
+        if (name.contains(" ")) {
+            throw new InvalidHomeNameException(
+                    "The name cannot have spaces"
+            );
+        }
+
+        if (getHomes(player).containsKey(name.toLowerCase())) {
+            throw new InvalidHomeNameException(
+                    String.format("A home already exists that is named %s", name)
             );
         }
 
@@ -211,8 +267,15 @@ public class HomesManager {
                 false
         );
 
-        final NavigableMap<Integer, Home> playerMaps = homes.get(player.getUniqueId());
-        playerMaps.put(home.getId(), home);
+        final Map<String, Home> playerMaps = homes.get(player.getUniqueId());
+
+        // Was the home destroyed? Do we need to save it to the database earlier than expected?
+        if (playerMaps.containsKey(home.getName().toLowerCase())) {
+            final Home oldHome = playerMaps.get(home.getName().toLowerCase());
+            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> oldHome.save());
+        }
+
+        playerMaps.put(home.getName().toLowerCase(), home);
         homes.put(player.getUniqueId(), playerMaps);
     }
 
