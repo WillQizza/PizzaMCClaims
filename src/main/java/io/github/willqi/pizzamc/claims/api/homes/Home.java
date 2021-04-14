@@ -1,6 +1,6 @@
 package io.github.willqi.pizzamc.claims.api.homes;
 
-import io.github.willqi.pizzamc.claims.ClaimsPlugin;
+import io.github.willqi.pizzamc.claims.plugin.ClaimsPlugin;
 import io.github.willqi.pizzamc.claims.database.SaveableObject;
 import org.bukkit.OfflinePlayer;
 

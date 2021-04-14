@@ -1,6 +1,6 @@
 package io.github.willqi.pizzamc.claims.api.homes;
 
-import io.github.willqi.pizzamc.claims.ClaimsPlugin;
+import io.github.willqi.pizzamc.claims.plugin.ClaimsPlugin;
 import io.github.willqi.pizzamc.claims.api.homes.exceptions.HomesNotLoadedException;
 import io.github.willqi.pizzamc.claims.api.homes.exceptions.InvalidHomeNameException;
 import org.bukkit.entity.Player;
@@ -13,9 +13,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
-/**
- * Used to interact with homes
- */
 public class HomesManager {
 
     public static int HOME_NAME_LENGTH = 50;                                // NOTE: Modifying this value requires you to update existing tables.

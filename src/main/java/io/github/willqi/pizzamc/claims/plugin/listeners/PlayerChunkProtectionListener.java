@@ -1,4 +1,4 @@
-package io.github.willqi.pizzamc.claims.listeners;
+package io.github.willqi.pizzamc.claims.plugin.listeners;
 
 import org.bukkit.event.Listener;
 

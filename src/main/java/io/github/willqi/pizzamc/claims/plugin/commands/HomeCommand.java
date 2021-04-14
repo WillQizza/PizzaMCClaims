@@ -1,7 +1,7 @@
-package io.github.willqi.pizzamc.claims.commands;
+package io.github.willqi.pizzamc.claims.plugin.commands;
 
-import io.github.willqi.pizzamc.claims.ClaimsPlugin;
-import io.github.willqi.pizzamc.claims.Utility;
+import io.github.willqi.pizzamc.claims.plugin.ClaimsPlugin;
+import io.github.willqi.pizzamc.claims.plugin.Utility;
 import io.github.willqi.pizzamc.claims.api.homes.Home;
 import io.github.willqi.pizzamc.claims.api.homes.HomesManager;
 import io.github.willqi.pizzamc.claims.api.homes.exceptions.InvalidHomeNameException;

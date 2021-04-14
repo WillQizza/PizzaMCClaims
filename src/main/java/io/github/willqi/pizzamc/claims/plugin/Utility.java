@@ -1,4 +1,4 @@
-package io.github.willqi.pizzamc.claims;
+package io.github.willqi.pizzamc.claims.plugin;
 
 import net.minecraft.server.v1_12_R1.NBTTagCompound;
 import org.bukkit.ChatColor;

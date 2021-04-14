@@ -1,7 +1,7 @@
-package io.github.willqi.pizzamc.claims.menus;
+package io.github.willqi.pizzamc.claims.plugin.menus;
 
-import io.github.willqi.pizzamc.claims.ClaimsPlugin;
-import io.github.willqi.pizzamc.claims.Utility;
+import io.github.willqi.pizzamc.claims.plugin.ClaimsPlugin;
+import io.github.willqi.pizzamc.claims.plugin.Utility;
 import io.github.willqi.pizzamc.claims.api.homes.Home;
 import net.minecraft.server.v1_12_R1.NBTTagCompound;
 import org.bukkit.Bukkit;
