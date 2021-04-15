@@ -28,9 +28,8 @@ public class ClaimHelper implements Cloneable {
         return this.uuid;
     }
 
-    public ClaimHelper setPermissions (int permissions) {
+    public void setPermissions (int permissions) {
         this.permissions = permissions;
-        return this;
     }
 
     /**
@@ -38,18 +37,16 @@ public class ClaimHelper implements Cloneable {
      * @param permission
      * @return the helper
      */
-    public ClaimHelper addPermission (Permissions permission) {
+    public void addPermission (Permissions permission) {
         if ((this.permissions & permission.getValue()) == 0) {
             this.permissions += permission.getValue();
         }
-        return this;
     }
 
-    public ClaimHelper removePermission (Permissions permission) {
+    public void removePermission (Permissions permission) {
         if ((this.permissions & permission.getValue()) != 0) {
             this.permissions -= permission.getValue();
         }
-        return this;
     }
 
     public boolean hasPermission (Permissions permission) {

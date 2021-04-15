@@ -23,11 +23,6 @@ public class HikariClaimsHelperDao implements ClaimsHelperDao {
     }
 
     @Override
-    public Optional<ClaimHelper> getClaimHelperByLocation(ChunkCoordinates location) {
-        return null;
-    }
-
-    @Override
     public void delete(ChunkCoordinates claimCoords, ClaimHelper helper) {
 
     }

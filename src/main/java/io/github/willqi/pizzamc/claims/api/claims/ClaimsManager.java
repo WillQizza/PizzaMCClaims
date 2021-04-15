@@ -39,6 +39,10 @@ public class ClaimsManager {
     private final Map<ChunkCoordinates, Claim> claimsCache;
     private final Map<ChunkCoordinates, Set<ClaimHelper>> helpersCache;
 
+    // Used to ensure that only 1 coordinate is being fetched at a time
+    private final Map<ChunkCoordinates, CompletableFuture<Claim>> queueClaimFutures;
+    private final Map<ChunkCoordinates, CompletableFuture<Set<ClaimHelper>>> queueHelperFutures;
+
     private final ClaimsDao claimsDao;
     private final ClaimsHelperDao claimsHelperDao;
 
@@ -48,9 +52,10 @@ public class ClaimsManager {
 
         this.claimsCache = new ConcurrentHashMap<>();
         this.helpersCache = new ConcurrentHashMap<>();
+
+        this.queueClaimFutures = new ConcurrentHashMap<>();
+        this.queueHelperFutures = new ConcurrentHashMap<>();
     }
-
-
 
 
     /**
@@ -63,12 +68,19 @@ public class ClaimsManager {
         if (existingClaim != null) {
             return CompletableFuture.completedFuture(existingClaim);
         } else {
-            return CompletableFuture.supplyAsync(() -> {
-                Optional<Claim> result = this.claimsDao.getClaimByLocation(new ChunkCoordinates(coordinates.getWorldUuid(), coordinates.getX(), coordinates.getZ()));
-                Claim claim = result.orElseGet(() -> new Claim(coordinates.getWorldUuid(), coordinates.getX(), coordinates.getZ()));
-                this.claimsCache.putIfAbsent(coordinates, claim);
-                return claim.clone();
-            });
+            // Ensure we don't run unnecessary queries
+            CompletableFuture<Claim> returnedFuture = this.queueClaimFutures.getOrDefault(coordinates, null);
+            if (returnedFuture == null) {
+                returnedFuture = CompletableFuture.supplyAsync(() -> {
+                    Optional<Claim> result = this.claimsDao.getClaimByLocation(coordinates);
+                    Claim claim = result.orElseGet(() -> new Claim(coordinates.getWorldUuid(), coordinates.getX(), coordinates.getZ(), 0));
+                    this.claimsCache.putIfAbsent(coordinates, claim);
+                    this.queueClaimFutures.remove(coordinates);
+                    return claim.clone();
+                });
+                this.queueClaimFutures.putIfAbsent(coordinates, returnedFuture);
+            }
+            return returnedFuture;
         }
     }
 
@@ -98,13 +110,21 @@ public class ClaimsManager {
         if (existingHelpers != null) {
             return CompletableFuture.completedFuture(existingHelpers.stream().map(ClaimHelper::clone).collect(Collectors.toSet()));
         } else {
-            return CompletableFuture.supplyAsync(() -> {
-                Set<ClaimHelper> helpers = this.claimsHelperDao.getClaimHelpersByLocation(coordinates);
-                this.helpersCache.putIfAbsent(coordinates, helpers);
-                return helpers.stream()
-                        .map(ClaimHelper::clone)
-                        .collect(Collectors.toSet());
-            });
+
+            // Ensure we don't run unnecessary queries
+            CompletableFuture<Set<ClaimHelper>> returnedFuture = this.queueHelperFutures.getOrDefault(coordinates, null);
+            if (returnedFuture == null) {
+                returnedFuture = CompletableFuture.supplyAsync(() -> {
+                    Set<ClaimHelper> helpers = this.claimsHelperDao.getClaimHelpersByLocation(coordinates);
+                    this.helpersCache.putIfAbsent(coordinates, helpers);
+                    this.queueHelperFutures.remove(coordinates);
+                    return helpers.stream()
+                            .map(ClaimHelper::clone)
+                            .collect(Collectors.toSet());
+                });
+                this.queueHelperFutures.putIfAbsent(coordinates, returnedFuture);
+            }
+            return returnedFuture;
         }
     }
 
@@ -139,17 +159,16 @@ public class ClaimsManager {
             try {
                 savedClaim = this.fetchClaim(claim).get();
             } catch (InterruptedException | ExecutionException exception) {
-                exception.printStackTrace();
-                return false;
+                throw new RuntimeException(exception);
             }
-            if (savedClaim.getOwner().isPresent()) {
+            if (savedClaim.getOwner().isPresent() || savedClaim.getFlags() != 0 ) {
                 this.claimsDao.update(claim);
-            } else if (claim.getOwner().isPresent()) {
+            } else if (claim.getOwner().isPresent() || claim.getFlags() != 0) {
                 this.claimsDao.insert(claim);
             } else {
                 return false;
             }
-            this.claimsCache.put(claim, claim);
+            this.claimsCache.put(claim, claim.clone());
             return true;
         });
     }
@@ -163,37 +182,33 @@ public class ClaimsManager {
     }
 
     public CompletableFuture<Boolean> saveClaimHelper(ChunkCoordinates coordinates, ClaimHelper helper) {
-        return CompletableFuture.supplyAsync(() -> {
-            Set<ClaimHelper> savedHelpers;
-            try {
-                savedHelpers = this.fetchClaimHelpers(coordinates).get();
-            } catch (InterruptedException | ExecutionException exception) {
-                exception.printStackTrace();
-                return false;
-            }
-            Optional<ClaimHelper> savedHelper = savedHelpers.stream()
-                    .filter(h -> h.getUuid().equals(helper.getUuid()))
-                    .findAny();
-            if (savedHelper.isPresent()) {
-                this.claimsHelperDao.update(coordinates, helper);
-                savedHelper.get().setPermissions(helper.getPermissions());
-            } else {
-                this.claimsHelperDao.insert(coordinates, helper);
-                savedHelpers.add(helper.clone());
-            }
-            this.helpersCache.put(coordinates, savedHelpers);
-            return true;
-        });
+        return this.fetchClaimHelpers(coordinates)
+                .thenApplyAsync(savedHelpers -> {
+                    Optional<ClaimHelper> savedHelper = savedHelpers.stream()
+                            .filter(h -> h.getUuid().equals(helper.getUuid()))
+                            .findAny();
+                    if (savedHelper.isPresent()) {
+                        this.claimsHelperDao.update(coordinates, helper);
+                        savedHelper.get().setPermissions(helper.getPermissions());
+                    } else if (helper.getPermissions() == 0) {
+                        return false;   // Don't save an empty helper that isn't in the database
+                    } else {
+                        this.claimsHelperDao.insert(coordinates, helper);
+                        savedHelpers.add(helper.clone());
+                    }
+                    this.helpersCache.put(coordinates, savedHelpers);
+                    return true;
+                });
     }
 
-    public CompletableFuture<Boolean> deleteClaimHelper(ChunkCoordinates coordinates, ClaimHelper helper) {
+    public CompletableFuture<Void> deleteClaimHelper(ChunkCoordinates coordinates, ClaimHelper helper) {
         return CompletableFuture.supplyAsync(() -> {
             this.claimsHelperDao.delete(coordinates, helper);
             Set<ClaimHelper> helpers = this.helpersCache.getOrDefault(coordinates, null);
             if (helpers != null) {
                 helpers.remove(helper);
             }
-            return true;
+            return null;
         });
     }
 
@@ -203,6 +218,8 @@ public class ClaimsManager {
      */
     public void cleanUp () {
         this.claimsCache.clear();
+        this.queueHelperFutures.clear();
+        this.queueClaimFutures.clear();
     }
 
 }

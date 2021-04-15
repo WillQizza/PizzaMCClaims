@@ -12,8 +12,9 @@ public class Claim extends ChunkCoordinates implements Cloneable {
     private int flags;
     private UUID owner = null;
 
-    public Claim (UUID levelUuid, int x, int z) {
+    public Claim (UUID levelUuid, int x, int z, int flags) {
         super(levelUuid, x, z);
+        this.flags = flags;
     }
 
     public Claim (UUID levelUuid, int x, int z, UUID owner, int flags) {
@@ -66,7 +67,7 @@ public class Claim extends ChunkCoordinates implements Cloneable {
             if (this.getOwner().isPresent()) {
                 return new Claim(this.getWorldUuid(), this.getX(), this.getZ(), this.owner, this.getFlags());
             } else {
-                return new Claim(this.getWorldUuid(), this.getX(), this.getZ());
+                return new Claim(this.getWorldUuid(), this.getX(), this.getZ(), this.getFlags());
             }
         }
     }

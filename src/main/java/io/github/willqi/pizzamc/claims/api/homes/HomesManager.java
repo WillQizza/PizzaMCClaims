@@ -1,7 +1,6 @@
 package io.github.willqi.pizzamc.claims.api.homes;
 
 import io.github.willqi.pizzamc.claims.api.homes.database.HomesDao;
-import io.github.willqi.pizzamc.claims.api.homes.exceptions.InvalidHomeNameException;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -23,12 +22,17 @@ public class HomesManager {
     private static final String SELECT_HOMES_OF_UUID = "SELECT * FROM homes WHERE player=?";
 
     private final Map<UUID, Map<String, Home>> cache;
+
+    private final Map<UUID, CompletableFuture<Map<String, Home>>> queueHomeFutures;
+
     private final HomesDao homesDao;
 
 
     public HomesManager (HomesDao homesDao) {
         this.cache = new ConcurrentHashMap<>();
         this.homesDao = homesDao;
+
+        this.queueHomeFutures = new ConcurrentHashMap<>();
     }
 
     public CompletableFuture<Map<String, Home>> fetchHomes(UUID playerUuid) {
@@ -36,18 +40,24 @@ public class HomesManager {
         if (existingHomes.isPresent()) {
             return CompletableFuture.completedFuture(Collections.unmodifiableMap(existingHomes.get()));
         } else {
-            return CompletableFuture.supplyAsync(() -> {
-                Set<Home> homes = this.homesDao.getHomesByOwner(playerUuid);
-                Map<String, Home> mappedHomes = new ConcurrentHashMap<>();
-                for (Home home : homes) {
-                    mappedHomes.put(home.getName(), home);
-                }
-                this.cache.putIfAbsent(playerUuid, mappedHomes);
+            CompletableFuture<Map<String, Home>> returnedFuture = this.queueHomeFutures.getOrDefault(playerUuid, null);
+            if (returnedFuture == null) {
+                returnedFuture = CompletableFuture.supplyAsync(() -> {
+                    Set<Home> homes = this.homesDao.getHomesByOwner(playerUuid);
+                    Map<String, Home> mappedHomes = new ConcurrentHashMap<>();
+                    for (Home home : homes) {
+                        mappedHomes.put(home.getName(), home);
+                    }
+                    this.cache.putIfAbsent(playerUuid, mappedHomes);
 
-                Map<String, Home> returnedMappedHomes = new HashMap<>(mappedHomes);
-                returnedMappedHomes.replaceAll((name, home) -> home.clone());
-                return Collections.unmodifiableMap(returnedMappedHomes);
-            });
+                    Map<String, Home> returnedMappedHomes = new HashMap<>(mappedHomes);
+                    returnedMappedHomes.replaceAll((name, home) -> home.clone());
+                    this.queueHomeFutures.remove(playerUuid);
+                    return Collections.unmodifiableMap(returnedMappedHomes);
+                });
+                this.queueHomeFutures.put(playerUuid, returnedFuture);
+            }
+            return returnedFuture;
         }
     }
 
@@ -99,6 +109,7 @@ public class HomesManager {
      */
     public void cleanUp () {
         this.cache.clear();
+        this.queueHomeFutures.clear();
     }
 
 }
