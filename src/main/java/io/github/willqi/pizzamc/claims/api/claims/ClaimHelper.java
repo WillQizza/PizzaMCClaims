@@ -1,5 +1,6 @@
 package io.github.willqi.pizzamc.claims.api.claims;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class ClaimHelper implements Cloneable {
@@ -53,6 +54,30 @@ public class ClaimHelper implements Cloneable {
 
     public boolean hasPermission (Permissions permission) {
         return (this.permissions & permission.getValue()) != 0;
+    }
+
+    @Override
+    protected ClaimHelper clone() {
+        try {
+            return (ClaimHelper)super.clone();
+        } catch (CloneNotSupportedException exception) {
+            return new ClaimHelper(this.getUuid(), this.getPermissions());
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.uuid);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ClaimHelper) {
+            ClaimHelper helper = (ClaimHelper)obj;
+            return helper.getUuid().equals(this.getUuid());
+        } else {
+            return false;
+        }
     }
 
     public enum Permissions {

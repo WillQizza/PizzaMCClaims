@@ -6,6 +6,7 @@ import io.github.willqi.pizzamc.claims.api.claims.ClaimsManager;
 import io.github.willqi.pizzamc.claims.api.claims.database.impl.HikariClaimsDao;
 import io.github.willqi.pizzamc.claims.api.claims.database.impl.HikariClaimsHelperDao;
 import io.github.willqi.pizzamc.claims.api.homes.HomesManager;
+import io.github.willqi.pizzamc.claims.api.homes.database.impl.HikariHomesDao;
 import io.github.willqi.pizzamc.claims.plugin.commands.HomeCommand;
 import io.github.willqi.pizzamc.claims.plugin.listeners.HomeListener;
 import io.github.willqi.pizzamc.claims.plugin.listeners.PlayerChunkProtectionListener;
@@ -52,7 +53,7 @@ public class ClaimsPlugin extends JavaPlugin {
         this.pool = new HikariPool(dbConfig);
 
         this.claimsManager = new ClaimsManager(new HikariClaimsDao(this.pool), new HikariClaimsHelperDao(this.pool));
-        this.homesManager = new HomesManager(this);
+        this.homesManager = new HomesManager(new HikariHomesDao());
         this.menuManager = new MenuManager(this);
 
 

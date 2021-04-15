@@ -1,7 +1,7 @@
 package io.github.willqi.pizzamc.claims.api.homes.exceptions;
 
 /**
- * Exception used for invalid house names
+ * Exception used thrown invalid house names
  */
 public class InvalidHomeNameException extends Exception {
 

@@ -59,6 +59,19 @@ public class Claim extends ChunkCoordinates implements Cloneable {
     }
 
     @Override
+    protected Claim clone() {
+        try {
+            return (Claim)super.clone();
+        } catch (CloneNotSupportedException exception) {
+            if (this.getOwner().isPresent()) {
+                return new Claim(this.getWorldUuid(), this.getX(), this.getZ(), this.owner, this.getFlags());
+            } else {
+                return new Claim(this.getWorldUuid(), this.getX(), this.getZ());
+            }
+        }
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(this.getX(), this.getZ(), this.getWorldUuid());
     }
@@ -70,19 +83,6 @@ public class Claim extends ChunkCoordinates implements Cloneable {
             return claimObj.getX() == this.getX() && claimObj.getZ() == this.getZ();
         } else {
             return false;
-        }
-    }
-
-    @Override
-    protected Claim clone() {
-        try {
-            return (Claim)super.clone();
-        } catch (CloneNotSupportedException exception) {
-            if (this.getOwner().isPresent()) {
-                return new Claim(this.getWorldUuid(), this.getX(), this.getZ(), this.owner, this.getFlags());
-            } else {
-                return new Claim(this.getWorldUuid(), this.getX(), this.getZ());
-            }
         }
     }
 

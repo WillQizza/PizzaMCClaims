@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 /**
  * Responsible for caching claims/helpers and
@@ -95,43 +96,21 @@ public class ClaimsManager {
     public CompletableFuture<Set<ClaimHelper>> fetchClaimHelpers(ChunkCoordinates coordinates) {
         Set<ClaimHelper> existingHelpers = this.helpersCache.getOrDefault(coordinates, null);
         if (existingHelpers != null) {
-            return CompletableFuture.completedFuture(existingHelpers);
+            return CompletableFuture.completedFuture(existingHelpers.stream().map(ClaimHelper::clone).collect(Collectors.toSet()));
         } else {
             return CompletableFuture.supplyAsync(() -> {
                 Set<ClaimHelper> helpers = this.claimsHelperDao.getClaimHelpersByLocation(coordinates);
                 this.helpersCache.putIfAbsent(coordinates, helpers);
-                return helpers;
+                return helpers.stream()
+                        .map(ClaimHelper::clone)
+                        .collect(Collectors.toSet());
             });
         }
     }
 
     public Optional<Set<ClaimHelper>> getClaimHelpers(ChunkCoordinates coordinates) {
-        return Optional.ofNullable(this.helpersCache.getOrDefault(coordinates, null));
-    }
-
-    public CompletableFuture<Optional<ClaimHelper>> fetchClaimHelper(ChunkCoordinates coordinates, UUID helperUuid) {
-        Set<ClaimHelper> existingHelpers = this.helpersCache.getOrDefault(coordinates, null);
-        if (existingHelpers != null) {
-            return CompletableFuture.completedFuture(
-                    existingHelpers.stream()
-                        .filter(helper -> helper.getUuid().equals(helperUuid))
-                        .findAny()
-            );
-        } else {
-            return CompletableFuture.supplyAsync(() -> {
-                Optional<ClaimHelper> helper = this.claimsHelperDao.getClaimHelperByLocation(coordinates);
-                Set<ClaimHelper> currentExistingHelpers = this.helpersCache.getOrDefault(coordinates, null);
-                if (currentExistingHelpers == null) {
-                    currentExistingHelpers = this.helpersCache.putIfAbsent(coordinates, ConcurrentHashMap.newKeySet());
-                }
-                if (helper.isPresent()) {
-                    currentExistingHelpers.add(helper.get());
-                } else {
-                    currentExistingHelpers.removeIf(h -> h.getUuid().equals(helperUuid));
-                }
-                return helper;
-            });
-        }
+        return Optional.ofNullable(this.helpersCache.getOrDefault(coordinates, null))
+                .map(helpers -> helpers.stream().map(ClaimHelper::clone).collect(Collectors.toSet()));
     }
 
     public Optional<ClaimHelper> getClaimHelper(ChunkCoordinates coordinates, UUID helperUuid) {
@@ -139,6 +118,7 @@ public class ClaimsManager {
         if (existingHelpers != null) {
             return existingHelpers.stream()
                     .filter(helper -> helper.getUuid().equals(helperUuid))
+                    .map(ClaimHelper::clone)
                     .findAny();
         } else {
             return Optional.empty();
@@ -163,43 +143,59 @@ public class ClaimsManager {
                 return false;
             }
             if (savedClaim.getOwner().isPresent()) {
-                if (claim.getOwner().isPresent()) {
-                    this.claimsDao.update(claim);
-                } else {
-                    this.claimsDao.delete(claim);
-                }
+                this.claimsDao.update(claim);
             } else if (claim.getOwner().isPresent()) {
                 this.claimsDao.insert(claim);
             } else {
                 return false;
             }
+            this.claimsCache.put(claim, claim);
             return true;
         });
     }
 
-    public CompletableFuture<Boolean> saveClaimHelper(Claim claim, ClaimHelper helper) {
+    public CompletableFuture<Boolean> deleteClaim(Claim claim) {
         return CompletableFuture.supplyAsync(() -> {
-            Optional<ClaimHelper> savedHelper;
+            this.claimsDao.delete(claim);
+            this.claimsCache.remove(claim);
+            return true;
+        });
+    }
+
+    public CompletableFuture<Boolean> saveClaimHelper(ChunkCoordinates coordinates, ClaimHelper helper) {
+        return CompletableFuture.supplyAsync(() -> {
+            Set<ClaimHelper> savedHelpers;
             try {
-                savedHelper = this.fetchClaimHelper(claim, helper.getUuid()).get();
+                savedHelpers = this.fetchClaimHelpers(coordinates).get();
             } catch (InterruptedException | ExecutionException exception) {
                 exception.printStackTrace();
                 return false;
             }
+            Optional<ClaimHelper> savedHelper = savedHelpers.stream()
+                    .filter(h -> h.getUuid().equals(helper.getUuid()))
+                    .findAny();
             if (savedHelper.isPresent()) {
-                if (helper.getPermissions() == 0) {
-                    this.claimsHelperDao.delete(claim, helper);
-                } else {
-                    this.claimsHelperDao.update(claim, helper);
-                }
+                this.claimsHelperDao.update(coordinates, helper);
+                savedHelper.get().setPermissions(helper.getPermissions());
             } else {
-                this.claimsHelperDao.insert(claim, helper);
+                this.claimsHelperDao.insert(coordinates, helper);
+                savedHelpers.add(helper.clone());
             }
+            this.helpersCache.put(coordinates, savedHelpers);
             return true;
         });
     }
 
-
+    public CompletableFuture<Boolean> deleteClaimHelper(ChunkCoordinates coordinates, ClaimHelper helper) {
+        return CompletableFuture.supplyAsync(() -> {
+            this.claimsHelperDao.delete(coordinates, helper);
+            Set<ClaimHelper> helpers = this.helpersCache.getOrDefault(coordinates, null);
+            if (helpers != null) {
+                helpers.remove(helper);
+            }
+            return true;
+        });
+    }
 
 
     /**

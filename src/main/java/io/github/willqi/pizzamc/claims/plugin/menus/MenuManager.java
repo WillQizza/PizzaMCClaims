@@ -122,7 +122,7 @@ public class MenuManager implements Listener {
         final ItemMeta gotoHomeItemMeta = gotoHomeItem.getItemMeta();
         gotoHomeItemMeta.setDisplayName(String.format("%sTeleport To Home", ChatColor.GREEN));
         gotoHomeItemMeta.setLore(Arrays.asList(
-                String.format("%s(%s, %s, %s) (Dimension: %s)", ChatColor.BLUE, home.getX(), home.getY(), home.getZ(), Bukkit.getWorld(home.getLevelUUID()).getName())
+                String.format("%s(%s, %s, %s) (Dimension: %s)", ChatColor.BLUE, home.getX(), home.getY(), home.getZ(), Bukkit.getWorld(home.getWorldUuid()).getName())
         ));
         gotoHomeItem.setItemMeta(gotoHomeItemMeta);
 
@@ -222,7 +222,7 @@ public class MenuManager implements Listener {
                             event.getWhoClicked().closeInventory();
                             event.getWhoClicked().teleport(
                                     new Location(
-                                            event.getWhoClicked().getServer().getWorld(homeInQuestion.getLevelUUID()),
+                                            event.getWhoClicked().getServer().getWorld(homeInQuestion.getWorldUuid()),
                                             homeInQuestion.getX(),
                                             homeInQuestion.getY(),
                                             homeInQuestion.getZ()

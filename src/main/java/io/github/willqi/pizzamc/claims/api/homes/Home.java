@@ -1,146 +1,98 @@
 package io.github.willqi.pizzamc.claims.api.homes;
 
-import io.github.willqi.pizzamc.claims.plugin.ClaimsPlugin;
-import io.github.willqi.pizzamc.claims.database.SaveableObject;
-import org.bukkit.OfflinePlayer;
+import io.github.willqi.pizzamc.claims.api.homes.exceptions.InvalidHomeNameException;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.util.Objects;
 import java.util.UUID;
-import java.util.logging.Level;
 
-public class Home implements SaveableObject {
+public class Home implements Cloneable {
+
+    public static final int MAX_NAME_LENGTH = 50;
 
     private static final String SAVE_QUERY = "REPLACE INTO homes (id, level, x, y, z, name, player) VALUES (?, ?, ?, ?, ?, ?, ?)";
     private static final String DELETE_QUERY = "DELETE FROM homes WHERE id=?";
 
-    private final int id;
-    private final int x;
-    private final int y;
-    private final int z;
-    private final OfflinePlayer player;
     private final String name;
-    private final UUID levelUUID;
+    private final UUID ownerUuid;
 
-    private boolean wasModified;
-    private boolean destroyed;
+    private double x;
+    private double y;
+    private double z;
+    private UUID worldUuid;
 
-    public Home (int id, OfflinePlayer player, UUID levelUUID, String name, int x, int y, int z, boolean fromDatabase) {
-        this.id = id;
-        this.player = player;
-        this.levelUUID = levelUUID;
+    public Home(UUID ownerUuid, String name, UUID worldUuid, double x, double y, double z) throws InvalidHomeNameException {
+        this.ownerUuid = ownerUuid;
         this.name = name;
+        this.worldUuid = worldUuid;
         this.x = x;
         this.y = y;
         this.z = z;
-        wasModified = !fromDatabase;
+
+        if (this.name.length() > MAX_NAME_LENGTH) {
+            throw new InvalidHomeNameException("The home name is too long");
+        }
     }
 
-
-    /**
-     * Get the UUID of the level this home is in
-     * @return the UUID
-     */
-    public UUID getLevelUUID () {
-        return levelUUID;
+    public UUID getWorldUuid() {
+        return worldUuid;
+    }
+    public void setWorldUuid(UUID uuid) {
+        this.worldUuid = uuid;
     }
 
-    /**
-     * Get the id of the home
-     * @return the id of the home
-     */
-    public int getId () {
-        return id;
+    public double getX() {
+        return this.x;
+    }
+    public void setX(double x) {
+        this.x = x;
     }
 
-    /**
-     * Get the x coordinate of a home
-     * @return the x
-     */
-    public int getX () {
-        return x;
+    public double getY() {
+        return this.y;
+    }
+    public void setY(double y) {
+        this.y = y;
     }
 
-    /**
-     * Get the y coordinate of a home
-     * @return the y
-     */
-    public int getY () {
-        return y;
+    public double getZ() {
+        return this.z;
+    }
+    public void setZ(double z) {
+        this.z = z;
     }
 
-    /**
-     * Get the z coordinate of a home
-     * @return the z
-     */
-    public int getZ () {
-        return z;
+    public UUID getOwnerUuid() {
+        return this.ownerUuid;
     }
-
-    /**
-     * Get the owner of the home
-     * @return the owner
-     */
-    public OfflinePlayer getOwner () {
-        return player;
-    }
-
-    /**
-     * Get the name of the home
-     * @return the name
-     */
-    public String getName () {
-        return name;
-    }
-
-    public boolean isDestroyed () {
-        return destroyed;
-    }
-
-    /**
-     * Destroy the home.
-     */
-    public void destroy () {
-        destroyed = true;
-        wasModified = true;
+    public String getName() {
+        return this.name;
     }
 
     @Override
-    public boolean isModified() {
-        return wasModified;
-    }
-
-    @Override
-    public void save() {
-
-        ClaimsPlugin plugin = ClaimsPlugin.getPlugin(ClaimsPlugin.class);
-        synchronized (plugin.getDatabase().getConnection()) {
-            PreparedStatement stmt = null;
+    public Home clone() {
+        try {
+            return (Home)super.clone();
+        } catch (CloneNotSupportedException exception) {
             try {
-                if (destroyed) {
-                    stmt = plugin.getDatabase().getConnection().prepareStatement(DELETE_QUERY);
-                } else {
-                    stmt = plugin.getDatabase().getConnection().prepareStatement(SAVE_QUERY);
-                    stmt.setString(2, levelUUID.toString());
-                    stmt.setInt(3, x);
-                    stmt.setInt(4, y);
-                    stmt.setInt(5, z);
-                    stmt.setString(6, name);
-                    stmt.setString(7, player.getUniqueId().toString());
-                }
-                stmt.setInt(1, id);
-                stmt.execute();
-            } catch (SQLException exception) {
-                plugin.getLogger().log(Level.WARNING, "Failed to save data for home id: " + id);
-            } finally {
-                if (stmt != null) {
-                    try {
-                        stmt.close();
-                    } catch (SQLException exception) {}
-                }
+                return new Home(this.ownerUuid, this.name, this.worldUuid, this.x, this.y, this.z);
+            } catch (InvalidHomeNameException homeNameException) {
+                throw new AssertionError("Failed to clone new home. Unexpectedly threw invalid home name");
             }
         }
-
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.name, this.ownerUuid);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Home) {
+            Home home = (Home)obj;
+            return home.getName().equals(this.getName()) && home.getOwnerUuid().equals(this.getOwnerUuid());
+        } else {
+            return false;
+        }
+    }
 }
