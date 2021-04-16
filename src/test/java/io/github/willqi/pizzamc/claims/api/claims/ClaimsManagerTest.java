@@ -38,6 +38,7 @@ public class ClaimsManagerTest {
 
         try {
             claimsManager.fetchClaim(daoClaim).get();
+            claimsManager.fetchClaim(daoClaim).get();
         } catch (InterruptedException | ExecutionException exception) {
             throw new AssertionError("fetchClaim threw an error somehow", exception);
         }
@@ -194,7 +195,12 @@ public class ClaimsManagerTest {
         try {
             claimsManager.saveClaim(daoClaim).get();
             daoClaim.setFlags(2);
-            assertNotEquals(daoClaim.getFlags(), claimsManager.fetchClaim(daoClaim).get().getFlags());
+            Claim fetchedClaim = claimsManager.fetchClaim(daoClaim).get();
+            assertNotEquals(daoClaim.getFlags(), fetchedClaim.getFlags());
+
+            // Ensure that the fetched claim returns a cloned claim and that it does not modify the original
+            fetchedClaim.setFlags(3);
+            assertNotEquals(fetchedClaim.getFlags(), claimsManager.fetchClaim(daoClaim).get().getFlags());
         } catch (InterruptedException | ExecutionException exception) {
             throw new AssertionError("fetchClaim threw an error somehow", exception);
         }

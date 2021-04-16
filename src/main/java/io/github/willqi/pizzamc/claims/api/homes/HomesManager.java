@@ -38,7 +38,9 @@ public class HomesManager {
     public CompletableFuture<Map<String, Home>> fetchHomes(UUID playerUuid) {
         Optional<Map<String, Home>> existingHomes = this.getHomes(playerUuid);
         if (existingHomes.isPresent()) {
-            return CompletableFuture.completedFuture(Collections.unmodifiableMap(existingHomes.get()));
+            Map<String, Home> returnedHomes = new HashMap<>(existingHomes.get());
+            returnedHomes.replaceAll((name, home) -> home.clone());
+            return CompletableFuture.completedFuture(Collections.unmodifiableMap(returnedHomes));
         } else {
             CompletableFuture<Map<String, Home>> returnedFuture = this.queueHomeFutures.getOrDefault(playerUuid, null);
             if (returnedFuture == null) {
@@ -62,11 +64,18 @@ public class HomesManager {
     }
 
     public Optional<Map<String, Home>> getHomes(UUID playerUuid) {
-        return Optional.ofNullable(this.cache.getOrDefault(playerUuid, null));
+        Map<String, Home> cachedMap = this.cache.getOrDefault(playerUuid, null);
+        if (cachedMap != null) {
+            Map<String, Home> returnedMap = new HashMap<>(cachedMap);
+            returnedMap.replaceAll((name, home) -> home.clone());
+            return Optional.of(Collections.unmodifiableMap(returnedMap));
+        } else {
+            return Optional.empty();
+        }
     }
 
-    public Optional<Home> getHome (UUID uuid, String name) {
-        Optional<Map<String, Home>> homes = this.getHomes(uuid);
+    public Optional<Home> getHome (UUID ownerUuid, String name) {
+        Optional<Map<String, Home>> homes = this.getHomes(ownerUuid);
         if (homes.isPresent()) {
             return Optional.ofNullable(homes.get().getOrDefault(name, null));
         } else {

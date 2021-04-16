@@ -66,7 +66,7 @@ public class ClaimsManager {
     public CompletableFuture<Claim> fetchClaim(ChunkCoordinates coordinates) {
         Claim existingClaim = this.claimsCache.getOrDefault(coordinates, null);
         if (existingClaim != null) {
-            return CompletableFuture.completedFuture(existingClaim);
+            return CompletableFuture.completedFuture(existingClaim.clone());
         } else {
             // Ensure we don't run unnecessary queries
             CompletableFuture<Claim> returnedFuture = this.queueClaimFutures.getOrDefault(coordinates, null);
