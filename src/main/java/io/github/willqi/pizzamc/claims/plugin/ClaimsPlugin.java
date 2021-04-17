@@ -86,7 +86,7 @@ public class ClaimsPlugin extends JavaPlugin {
     }
 
     private void registerMenuTypes() {
-        this.menuManager.register(HomeSelectionMenuType.ID, new HomeSelectionMenuType());
+        this.menuManager.register(HomeSelectionMenuType.ID, new HomeSelectionMenuType(this));
         this.menuManager.register(HomeInformationType.ID, new HomeInformationType());
     }
 
