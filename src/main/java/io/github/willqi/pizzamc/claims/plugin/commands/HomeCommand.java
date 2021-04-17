@@ -1,10 +1,13 @@
 package io.github.willqi.pizzamc.claims.plugin.commands;
 
 import io.github.willqi.pizzamc.claims.plugin.ClaimsPlugin;
+import io.github.willqi.pizzamc.claims.plugin.Permissions;
 import io.github.willqi.pizzamc.claims.plugin.Utility;
 import io.github.willqi.pizzamc.claims.api.homes.Home;
 import io.github.willqi.pizzamc.claims.api.homes.HomesManager;
 import io.github.willqi.pizzamc.claims.api.homes.exceptions.InvalidHomeNameException;
+import io.github.willqi.pizzamc.claims.plugin.menus.types.HomeInformationType;
+import io.github.willqi.pizzamc.claims.plugin.menus.types.HomeSelectionMenuType;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -27,55 +30,50 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                                                 "/home destroy <name> - Destroy a home\n" +
                                                 "/home details <name> - Modify/view your home";
 
-    public static final String PERMISSION = "pizzamcclaims.commands.home";
-
     private final ClaimsPlugin plugin;
 
-    public HomeCommand (final ClaimsPlugin plugin) {
+    public HomeCommand (ClaimsPlugin plugin) {
         this.plugin = plugin;
     }
 
     @Override
-    public boolean onCommand(final CommandSender commandSender, final Command command, final String label, final String[] args) {
+    public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
 
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(Utility.formatResponse("Homes", "You can only run this command as a player.", ChatColor.RED));
             return true;
         }
-        final Player player = (Player)commandSender;
+        Player player = (Player)commandSender;
 
-        if (!player.hasPermission(PERMISSION)) {
+        if (!player.hasPermission(Permissions.CAN_USE_HOME_COMMAND)) {
             commandSender.sendMessage(Utility.formatResponse("Permissions", "You do not have permission to run this command.", ChatColor.RED));
             return true;
         }
-
         if (args.length == 0) {
             player.sendMessage(Utility.formatResponse("Homes", USAGE_MESSAGE));
             return true;
         }
 
-        final HomesManager homesManager = plugin.getHomesManager();
-
-        if (!homesManager.hasHomesLoaded(player)) {
+        HomesManager homesManager = this.plugin.getHomesManager();
+        Optional<Map<String, Home>> homes = homesManager.getHomes(player.getUniqueId());
+        if (!homes.isPresent()) {
             player.sendMessage(Utility.formatResponse("Homes", "Please wait a moment...", ChatColor.RED));
             return true;
         }
 
-        final Map<String, Home> playerHomes = homesManager.getHomes(player);
-
         Optional<Home> targetHome;
         switch (args[0].toLowerCase()) {
             case "list":
-                plugin.getMenuManager().sendHomeMenu(player);
+                this.plugin.getMenuManager().showMenu(player, HomeSelectionMenuType.ID);
                 break;
             case "teleport":
             case "tp":
-
                 if (args.length < 2) {
-                    player.sendMessage(Utility.formatResponse("Homes", String.format("Incorrect usage: /%s %s <name>", label, args[0].toLowerCase()), ChatColor.RED));
+                    player.sendMessage(Utility.formatResponse("Homes", "Incorrect usage: /" + label + " " + args[0].toLowerCase() + " <name>", ChatColor.RED));
                     return true;
                 }
-                targetHome = homesManager.getHome(player, String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
+
+                targetHome = homesManager.getHome(player.getUniqueId(), String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
                 if (!targetHome.isPresent()) {
                     player.sendMessage(Utility.formatResponse("Homes", "No home could be found by that name!", ChatColor.RED));
                     return true;
@@ -98,17 +96,42 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(Utility.formatResponse("Homes", String.format("Incorrect usage: /%s %s <name>", label, args[0].toLowerCase()), ChatColor.RED));
                     return true;
                 }
-                if (!homesManager.canCreateHome(player)) {
-                    player.sendMessage(Utility.formatResponse("Homes", "You have reached the max homes limit!", ChatColor.RED));
+                String homeName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+                // TODO: implement userManager to handle home/claim limits
+//                if (!homesManager.canCreateHome(player)) {
+//                    player.sendMessage(Utility.formatResponse("Homes", "You have reached the max homes limit!", ChatColor.RED));
+//                    return true;
+//                }
+
+                // Does the home already exist?
+                if (homesManager.getHome(player.getUniqueId(), homeName).isPresent()) {
+                    player.sendMessage(Utility.formatResponse("Homes", "You already have a home named this!", ChatColor.RED));
                     return true;
                 }
+
+                Home createdHome;
                 try {
-                    homesManager.createHome(player, String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
+                    createdHome = new Home(
+                            player.getUniqueId(),
+                            homeName,
+                            player.getLocation().getWorld().getUID(),
+                            player.getLocation().getX(),
+                            player.getLocation().getY(),
+                            player.getLocation().getZ()
+                    );
                 } catch (InvalidHomeNameException exception) {
                     player.sendMessage(Utility.formatResponse("Homes", exception.getMessage(), ChatColor.RED));
                     return true;
                 }
-                player.sendMessage(Utility.formatResponse("Home", "Home created!", ChatColor.GREEN));
+
+                homesManager.save(createdHome).whenCompleteAsync((v, exception) -> {
+                    if (exception != null) {
+                        exception.printStackTrace();
+                        player.sendMessage(Utility.formatResponse("Home", "An exception has occurred.", ChatColor.RED));
+                    } else {
+                        player.sendMessage(Utility.formatResponse("Home", "Home created!", ChatColor.GREEN));
+                    }
+                });
                 break;
             case "remove":
             case "destroy":
@@ -117,13 +140,21 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(Utility.formatResponse("Homes", String.format("Incorrect usage: /%s %s <name>", label, args[0].toLowerCase()), ChatColor.RED));
                     return true;
                 }
-                targetHome = homesManager.getHome(player, String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
+
+                targetHome = homesManager.getHome(player.getUniqueId(), String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
                 if (!targetHome.isPresent()) {
                     player.sendMessage(Utility.formatResponse("Homes", "No home could be found by that name!", ChatColor.RED));
                     return true;
                 }
-                targetHome.get().destroy();
-                player.sendMessage(Utility.formatResponse("Homes", "Deleted home!", ChatColor.GREEN));
+
+                homesManager.delete(targetHome.get()).whenComplete((v, exception) -> {
+                    if (exception != null) {
+                        exception.printStackTrace();
+                        player.sendMessage(Utility.formatResponse("Homes", "An exception has occurred.", ChatColor.RED));
+                    } else {
+                        player.sendMessage(Utility.formatResponse("Homes", "Deleted home!", ChatColor.GREEN));
+                    }
+                });
                 break;
             case "details":
             case "detail":
@@ -131,12 +162,15 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(Utility.formatResponse("Homes", String.format("Incorrect usage: /%s %s <name>", label, args[0].toLowerCase()), ChatColor.RED));
                     return true;
                 }
-                targetHome = homesManager.getHome(player, String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
+
+                targetHome = homesManager.getHome(player.getUniqueId(), String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
                 if (!targetHome.isPresent()) {
                     player.sendMessage(Utility.formatResponse("Homes", "No home could be found by that name!", ChatColor.RED));
                     return true;
                 }
-                plugin.getMenuManager().sendHomeInformationMenu(player, targetHome.get());
+                Map<String, Object> menuParams = new HashMap<>();
+                menuParams.put("home", targetHome.get());
+                this.plugin.getMenuManager().showMenu(player, HomeInformationType.ID, menuParams);
                 break;
             default:
                 player.sendMessage(Utility.formatResponse("Homes", USAGE_MESSAGE));
@@ -147,11 +181,12 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
     }
 
     @Override
-    public List<String> onTabComplete(final CommandSender commandSender, final Command command, final String s, final String[] args) {
+    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args) {
 
         if (!(commandSender instanceof Player)) {
             return new ArrayList<>();
         }
+        Player player = (Player)commandSender;
 
         List<String> options = new ArrayList<>();
         switch (args.length) {
@@ -166,9 +201,18 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                     case "teleport":
                     case "destroy":
                     case "details":
-                        Collections.sort(
-                                StringUtil.copyPartialMatches(args[1], plugin.getHomesManager().getHomes((Player)commandSender).values().stream().map(home -> home.getName()).collect(Collectors.toList()), options)
-                        );
+                        Optional<Map<String, Home>> homes = this.plugin.getHomesManager().getHomes(player.getUniqueId());
+                        homes.ifPresent(homesMap -> Collections.sort(
+                                StringUtil.copyPartialMatches(
+                                        args[1],
+                                        homesMap
+                                                .values()
+                                                .stream()
+                                                .map(Home::getName)
+                                                .collect(Collectors.toList()),
+                                        options
+                                )
+                        ));
                         break;
                 }
 

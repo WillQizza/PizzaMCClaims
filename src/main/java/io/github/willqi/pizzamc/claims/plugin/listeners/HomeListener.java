@@ -6,9 +6,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-/**
- * Listener responsible for everything related to homes.
- */
 public class HomeListener implements Listener {
 
     private final HomesManager manager;
@@ -19,12 +16,12 @@ public class HomeListener implements Listener {
 
     @EventHandler
     public void loadHomesOnPlayerJoin (PlayerJoinEvent event) {
-        this.manager.loadHomes(event.getPlayer());
+        this.manager.fetchHomes(event.getPlayer().getUniqueId());
     }
 
     @EventHandler
     public void unloadHomesOnPlayerLeave (PlayerQuitEvent event) {
-        this.manager.unloadHomes(event.getPlayer());
+        this.manager.clearHomesCache(event.getPlayer().getUniqueId());
     }
 
 }
