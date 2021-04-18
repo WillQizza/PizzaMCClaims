@@ -204,7 +204,6 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                     case "teleport":
                     case "destroy":
                     case "details":
-                        player.sendMessage(args[0]);
                         Optional<Map<String, Home>> homes = this.plugin.getHomesManager().getHomes(player.getUniqueId());
                         homes.ifPresent(homesMap -> Collections.sort(
                                 StringUtil.copyPartialMatches(
