@@ -18,6 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.logging.Level;
 
 public class HomeInformationType implements MenuType {
 
@@ -76,7 +77,7 @@ public class HomeInformationType implements MenuType {
                         home.setWorldUuid(player.getLocation().getWorld().getUID());
                         this.plugin.getHomesManager().save(home).whenComplete((v, exception) -> {
                             if (exception != null) {
-                                exception.printStackTrace();
+                                this.plugin.getLogger().log(Level.SEVERE, "An exception occured while trying to update a home's location.", exception);
                                 player.sendMessage(Utility.formatResponse("Homes", "An exception has occurred.", ChatColor.RED));
                             } else {
                                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);

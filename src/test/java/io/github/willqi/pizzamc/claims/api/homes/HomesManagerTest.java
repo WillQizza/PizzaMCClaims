@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
-import io.github.willqi.pizzamc.claims.api.homes.database.HomesDao;
+import io.github.willqi.pizzamc.claims.api.homes.dao.HomesDao;
 import io.github.willqi.pizzamc.claims.api.exceptions.InvalidHomeNameException;
 import org.junit.jupiter.api.Test;
 

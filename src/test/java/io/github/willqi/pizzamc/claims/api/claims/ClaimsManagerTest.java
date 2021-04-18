@@ -3,8 +3,8 @@ package io.github.willqi.pizzamc.claims.api.claims;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import io.github.willqi.pizzamc.claims.api.claims.database.ClaimsDao;
-import io.github.willqi.pizzamc.claims.api.claims.database.ClaimsHelperDao;
+import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimsDao;
+import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimsHelperDao;
 import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 import org.junit.jupiter.api.Test;
 

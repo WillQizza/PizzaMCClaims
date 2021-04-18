@@ -18,6 +18,7 @@ import org.bukkit.material.Wool;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class DeleteHomeConfirmationType implements MenuType {
 
@@ -62,7 +63,7 @@ public class DeleteHomeConfirmationType implements MenuType {
                         this.plugin.getMenuManager().closeMenu(player);
                         this.plugin.getHomesManager().delete(home).whenComplete((v, exception) -> {
                             if (exception != null) {
-                                exception.printStackTrace();
+                                this.plugin.getLogger().log(Level.SEVERE, "An exception occurred while trying to delete a home.", exception);
                                 player.sendMessage(Utility.formatResponse("Homes", "An exception has occurred.", ChatColor.RED));
                             } else {
                                 player.sendMessage(Utility.formatResponse("Homes", "Deleted home!", ChatColor.GREEN));

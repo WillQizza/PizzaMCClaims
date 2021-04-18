@@ -1,20 +1,19 @@
-package io.github.willqi.pizzamc.claims.api.claims.database.impl;
+package io.github.willqi.pizzamc.claims.api.claims.dao.impl;
 
-import com.zaxxer.hikari.pool.HikariPool;
+import com.zaxxer.hikari.HikariDataSource;
 import io.github.willqi.pizzamc.claims.api.claims.ChunkCoordinates;
 import io.github.willqi.pizzamc.claims.api.claims.Claim;
-import io.github.willqi.pizzamc.claims.api.claims.database.ClaimsDao;
+import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimsDao;
 import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 
 import java.util.Optional;
 
-public class HikariClaimsDao implements ClaimsDao {
+public class SQLClaimsDao implements ClaimsDao {
 
-    private final HikariPool pool;
+    private final HikariDataSource source;
 
-    public HikariClaimsDao(HikariPool pool) {
-        this.pool = pool;
-
+    public SQLClaimsDao(HikariDataSource source) {
+        this.source = source;
     }
 
     @Override

@@ -1,7 +1,7 @@
 package io.github.willqi.pizzamc.claims.api.claims;
 
-import io.github.willqi.pizzamc.claims.api.claims.database.ClaimsDao;
-import io.github.willqi.pizzamc.claims.api.claims.database.ClaimsHelperDao;
+import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimsDao;
+import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimsHelperDao;
 import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 
 import java.util.*;

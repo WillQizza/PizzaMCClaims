@@ -1,7 +1,7 @@
 package io.github.willqi.pizzamc.claims.api.homes;
 
 import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
-import io.github.willqi.pizzamc.claims.api.homes.database.HomesDao;
+import io.github.willqi.pizzamc.claims.api.homes.dao.HomesDao;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;

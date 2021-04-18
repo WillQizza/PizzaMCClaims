@@ -1,4 +1,4 @@
-package io.github.willqi.pizzamc.claims.api.claims.database;
+package io.github.willqi.pizzamc.claims.api.claims.dao;
 
 import io.github.willqi.pizzamc.claims.api.claims.ChunkCoordinates;
 import io.github.willqi.pizzamc.claims.api.claims.Claim;

@@ -1,12 +1,10 @@
 package io.github.willqi.pizzamc.claims.plugin;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.pool.HikariPool;
 import io.github.willqi.pizzamc.claims.api.claims.ClaimsManager;
-import io.github.willqi.pizzamc.claims.api.claims.database.impl.HikariClaimsDao;
-import io.github.willqi.pizzamc.claims.api.claims.database.impl.HikariClaimsHelperDao;
+import io.github.willqi.pizzamc.claims.api.daosources.DaoSource;
+import io.github.willqi.pizzamc.claims.api.daosources.SQLDaoSource;
+import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 import io.github.willqi.pizzamc.claims.api.homes.HomesManager;
-import io.github.willqi.pizzamc.claims.api.homes.database.impl.HikariHomesDao;
 import io.github.willqi.pizzamc.claims.plugin.commands.HomeCommand;
 import io.github.willqi.pizzamc.claims.plugin.listeners.ClaimListener;
 import io.github.willqi.pizzamc.claims.plugin.listeners.HomeListener;
@@ -16,13 +14,15 @@ import io.github.willqi.pizzamc.claims.plugin.menus.types.HomeInformationType;
 import io.github.willqi.pizzamc.claims.plugin.menus.types.HomeSelectionMenuType;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.logging.Level;
+
 public class ClaimsPlugin extends JavaPlugin {
 
     private ClaimsManager claimsManager;
     private HomesManager homesManager;
     private MenuManager menuManager;
 
-    private HikariPool pool;
+    private DaoSource daoSource;
 
     @Override
     public void onDisable() {
@@ -32,13 +32,8 @@ public class ClaimsPlugin extends JavaPlugin {
         if (claimsManager != null) {
             claimsManager.cleanUp();
         }
-        if (this.pool != null)  {
-            try {
-                this.pool.shutdown();
-            } catch (InterruptedException exception) {
-                this.getLogger().severe("Failed to properly close Hikari pool.");
-                exception.printStackTrace();
-            }
+        if (this.daoSource != null)  {
+            this.daoSource.cleanUp();
         }
     }
 
@@ -47,14 +42,22 @@ public class ClaimsPlugin extends JavaPlugin {
 
         this.saveDefaultConfig();
 
-        HikariConfig dbConfig = new HikariConfig();
-        dbConfig.setJdbcUrl("jdbc:mysql://" + this.getConfig().getString("host") + ":" + this.getConfig().getInt("port") + "/" + this.getConfig().getString("database"));
-        dbConfig.setUsername(this.getConfig().getString("username"));
-        dbConfig.setPassword(this.getConfig().getString("password"));
-        this.pool = null;
+        try {
+            this.daoSource = new SQLDaoSource(
+                    this.getConfig().getString("host"),
+                    this.getConfig().getInt("port"),
+                    this.getConfig().getString("database"),
+                    this.getConfig().getString("username"),
+                    this.getConfig().getString("password")
+            );
+        } catch (DaoException exception) {
+            this.getLogger().log(Level.SEVERE, "Cannot connect to database.", exception);
+            this.getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
-        this.claimsManager = new ClaimsManager(new HikariClaimsDao(this.pool), new HikariClaimsHelperDao(this.pool));
-        this.homesManager = new HomesManager(new HikariHomesDao());
+        this.claimsManager = new ClaimsManager(this.daoSource.getClaimsDao(), this.daoSource.getClaimsHelperDao());
+        this.homesManager = new HomesManager(this.daoSource.getHomesDao());
         this.menuManager = new MenuManager(this);
 
         this.registerEvents();

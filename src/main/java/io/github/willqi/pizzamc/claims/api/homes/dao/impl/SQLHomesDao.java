@@ -1,17 +1,20 @@
-package io.github.willqi.pizzamc.claims.api.homes.database.impl;
+package io.github.willqi.pizzamc.claims.api.homes.dao.impl;
 
+import com.zaxxer.hikari.HikariDataSource;
 import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 import io.github.willqi.pizzamc.claims.api.homes.Home;
-import io.github.willqi.pizzamc.claims.api.homes.database.HomesDao;
+import io.github.willqi.pizzamc.claims.api.homes.dao.HomesDao;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-public class HikariHomesDao implements HomesDao {
+public class SQLHomesDao implements HomesDao {
 
-    public HikariHomesDao() {
+    private HikariDataSource source;
 
+    public SQLHomesDao(HikariDataSource source) {
+        this.source = source;
     }
 
     @Override

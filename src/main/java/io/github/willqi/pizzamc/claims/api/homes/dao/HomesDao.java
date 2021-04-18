@@ -1,4 +1,4 @@
-package io.github.willqi.pizzamc.claims.api.homes.database;
+package io.github.willqi.pizzamc.claims.api.homes.dao;
 
 import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 import io.github.willqi.pizzamc.claims.api.homes.Home;
