@@ -10,19 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class HomesManager {
 
-    private static final String CREATE_HOMES_TABLES = "CREATE TABLE IF NOT EXISTS homes (" +
-            "id INT PRIMARY KEY," +
-            "level VARCHAR(36)," +                                          // UUID of the level
-            "x INT," +                                                      // x position
-            "y INT," +                                                      // y position
-            "z INT," +                                                      // z position
-            "name VARCHAR(" + Home.MAX_NAME_LENGTH + ")," +                     // name of the home
-            "player VARCHAR(36)" +                                          // UUID of the owner of the home
-            ")";
-
-    private static final String SELECT_HOME_ID = "SELECT IFNULL(MAX(id) + 1, 0) AS home_id FROM homes";
-    private static final String SELECT_HOMES_OF_UUID = "SELECT * FROM homes WHERE player=?";
-
     private final Map<UUID, Map<String, Home>> cache;
 
     private final Map<UUID, CompletableFuture<Map<String, Home>>> queueHomeFutures;

@@ -9,9 +9,6 @@ public class Home implements Cloneable {
 
     public static final int MAX_NAME_LENGTH = 50;
 
-    private static final String SAVE_QUERY = "REPLACE INTO homes (id, level, x, y, z, name, player) VALUES (?, ?, ?, ?, ?, ?, ?)";
-    private static final String DELETE_QUERY = "DELETE FROM homes WHERE id=?";
-
     private final String name;
     private final UUID ownerUuid;
 

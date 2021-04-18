@@ -78,7 +78,7 @@ public class ClaimsPlugin extends JavaPlugin {
     }
 
     private void registerEvents() {
-        this.getServer().getPluginManager().registerEvents(new HomeListener(this.getHomesManager()), this);
+        this.getServer().getPluginManager().registerEvents(new HomeListener(this), this);
         this.getServer().getPluginManager().registerEvents(new ClaimListener(this.getClaimsManager()), this);
         this.getServer().getPluginManager().registerEvents(this.getMenuManager(), this);
     }

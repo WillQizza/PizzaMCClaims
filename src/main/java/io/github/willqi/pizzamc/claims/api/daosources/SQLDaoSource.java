@@ -11,6 +11,8 @@ import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 import io.github.willqi.pizzamc.claims.api.homes.dao.HomesDao;
 import io.github.willqi.pizzamc.claims.api.homes.dao.impl.SQLHomesDao;
 
+import java.sql.SQLException;
+
 public class SQLDaoSource implements DaoSource {
 
     private ClaimsDao claimsDao;
@@ -27,12 +29,16 @@ public class SQLDaoSource implements DaoSource {
         try {
             this.source = new HikariDataSource(dbConfig);
         } catch (HikariPool.PoolInitializationException exception) {
-            throw new DaoException(exception);
+            throw new DaoException("Failed to initialize hikari source.", exception);
         }
 
-        this.claimsDao = new SQLClaimsDao(this.source);
-        this.claimsHelperDao = new SQLClaimsHelperDao(this.source);
-        this.homesDao = new SQLHomesDao(this.source);
+        try {
+            this.claimsDao = new SQLClaimsDao(this.source);
+            this.claimsHelperDao = new SQLClaimsHelperDao(this.source);
+            this.homesDao = new SQLHomesDao(this.source);
+        } catch (SQLException exception) {
+            throw new DaoException("Failed to create daos", exception);
+        }
     }
 
     @Override
