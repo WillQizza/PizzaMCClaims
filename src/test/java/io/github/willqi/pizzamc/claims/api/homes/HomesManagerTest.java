@@ -3,8 +3,9 @@ package io.github.willqi.pizzamc.claims.api.homes;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 import io.github.willqi.pizzamc.claims.api.homes.database.HomesDao;
-import io.github.willqi.pizzamc.claims.api.homes.exceptions.InvalidHomeNameException;
+import io.github.willqi.pizzamc.claims.api.exceptions.InvalidHomeNameException;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -15,7 +16,7 @@ public class HomesManagerTest {
     private static final UUID NULL_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     @Test
-    public void fetchHomesShouldQueryDaoWithNoCacheData() {
+    public void fetchHomesShouldQueryDaoWithNoCacheData() throws DaoException {
         HomesDao mockHomesDao = spy(new TestHomesDao());
         HomesManager homesManager = new HomesManager(mockHomesDao);
 
@@ -60,7 +61,7 @@ public class HomesManagerTest {
     }
 
     @Test
-    public void saveShouldInsertIfNoHomeFound() {
+    public void saveShouldInsertIfNoHomeFound() throws DaoException {
         HomesDao mockHomesDao = spy(new TestHomesDao());
         HomesManager homesManager = new HomesManager(mockHomesDao);
 
@@ -77,7 +78,7 @@ public class HomesManagerTest {
     }
 
     @Test
-    public void saveShouldUpdateIfHomeFound() {
+    public void saveShouldUpdateIfHomeFound() throws DaoException {
         HomesDao mockHomesDao = spy(new TestHomesDao());
         HomesManager homesManager = new HomesManager(mockHomesDao);
 

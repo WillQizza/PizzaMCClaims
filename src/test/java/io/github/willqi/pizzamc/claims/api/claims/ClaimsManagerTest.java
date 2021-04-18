@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import io.github.willqi.pizzamc.claims.api.claims.database.ClaimsDao;
 import io.github.willqi.pizzamc.claims.api.claims.database.ClaimsHelperDao;
+import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
@@ -47,7 +48,7 @@ public class ClaimsManagerTest {
     }
 
     @Test
-    public void fetchAndGetClaimShouldRetrieveCacheDataWhenAvailable() {
+    public void fetchAndGetClaimShouldRetrieveCacheDataWhenAvailable() throws DaoException {
         Claim daoClaim = new Claim(NULL_UUID, 0, 0, 0);
 
         ClaimsDao mockClaimsDao = spy(new TestClaimsDao(){
@@ -102,7 +103,7 @@ public class ClaimsManagerTest {
     }
 
     @Test
-    public void savingEmptyClaimShouldOverwriteExistingClaims() {
+    public void savingEmptyClaimShouldOverwriteExistingClaims() throws DaoException {
         Claim daoClaim = new Claim(NULL_UUID, 0, 0, 1);
         ClaimsDao mockClaimsDao = spy(new TestClaimsDao() {
 
@@ -130,7 +131,7 @@ public class ClaimsManagerTest {
     }
 
     @Test
-    public void saveClaimShouldUpdateIfExistingClaimProvided() {
+    public void saveClaimShouldUpdateIfExistingClaimProvided() throws DaoException {
         Claim daoClaim = new Claim(NULL_UUID, 0, 0, NULL_UUID, 0);
 
         ClaimsDao mockClaimsDao = spy(new TestClaimsDao() {
@@ -156,7 +157,7 @@ public class ClaimsManagerTest {
     }
 
     @Test
-    public void saveClaimShouldInsertIfNoExistingClaimFound() {
+    public void saveClaimShouldInsertIfNoExistingClaimFound() throws DaoException {
         Claim daoClaim = new Claim(NULL_UUID, 0, 0, 1);
 
         ClaimsDao mockClaimsDao = spy(new TestClaimsDao() {
@@ -225,7 +226,7 @@ public class ClaimsManagerTest {
     //
 
     @Test
-    public void fetchClaimHelpersShouldQueryDaoWithNoCacheData() {
+    public void fetchClaimHelpersShouldQueryDaoWithNoCacheData() throws DaoException {
         ClaimsHelperDao mockHelpersDao = spy(new TestClaimsHelperDao());
         ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), mockHelpersDao);
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
@@ -240,7 +241,7 @@ public class ClaimsManagerTest {
     }
 
     @Test
-    public void fetchAndGetClaimHelpersShouldRetrieveCacheDataWhenAvailable() {
+    public void fetchAndGetClaimHelpersShouldRetrieveCacheDataWhenAvailable() throws DaoException {
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
         ClaimHelper daoHelper = new ClaimHelper(NULL_UUID, ClaimHelper.Permissions.ADMIN.getValue());
 
@@ -299,7 +300,7 @@ public class ClaimsManagerTest {
     }
 
     @Test
-    public void saveClaimHelpersShouldUpdateIfExistingHelperProvided() {
+    public void saveClaimHelpersShouldUpdateIfExistingHelperProvided() throws DaoException {
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
         ClaimHelper helper = new ClaimHelper(NULL_UUID, ClaimHelper.Permissions.ADMIN.getValue());
 
@@ -317,7 +318,7 @@ public class ClaimsManagerTest {
     }
 
     @Test
-    public void saveClaimHelpersShouldInsertIfNoExistingHelperFound() {
+    public void saveClaimHelpersShouldInsertIfNoExistingHelperFound() throws DaoException {
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
         ClaimHelper helper = new ClaimHelper(NULL_UUID, ClaimHelper.Permissions.ADMIN.getValue());
 
@@ -333,7 +334,7 @@ public class ClaimsManagerTest {
     }
 
     @Test
-    public void saveClaimHelperShouldNotInsertEmptyHelper() {
+    public void saveClaimHelperShouldNotInsertEmptyHelper() throws DaoException {
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
         ClaimHelper helper = new ClaimHelper(NULL_UUID, 0);
 

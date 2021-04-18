@@ -2,15 +2,16 @@ package io.github.willqi.pizzamc.claims.api.claims.database;
 
 import io.github.willqi.pizzamc.claims.api.claims.ChunkCoordinates;
 import io.github.willqi.pizzamc.claims.api.claims.Claim;
+import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 
 import java.util.Optional;
 
 public interface ClaimsDao {
 
-    Optional<Claim> getClaimByLocation(ChunkCoordinates location);
+    Optional<Claim> getClaimByLocation(ChunkCoordinates location) throws DaoException;
 
-    void delete(Claim claim);
-    void update(Claim claim);
-    void insert(Claim claim);
+    void delete(Claim claim) throws DaoException;
+    void update(Claim claim) throws DaoException;
+    void insert(Claim claim) throws DaoException;
 
 }

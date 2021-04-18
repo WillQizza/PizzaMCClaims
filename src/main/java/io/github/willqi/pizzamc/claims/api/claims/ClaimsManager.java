@@ -2,11 +2,12 @@ package io.github.willqi.pizzamc.claims.api.claims;
 
 import io.github.willqi.pizzamc.claims.api.claims.database.ClaimsDao;
 import io.github.willqi.pizzamc.claims.api.claims.database.ClaimsHelperDao;
+import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
@@ -72,7 +73,12 @@ public class ClaimsManager {
             CompletableFuture<Claim> returnedFuture = this.queueClaimFutures.getOrDefault(coordinates, null);
             if (returnedFuture == null) {
                 returnedFuture = CompletableFuture.supplyAsync(() -> {
-                    Optional<Claim> result = this.claimsDao.getClaimByLocation(coordinates);
+                    Optional<Claim> result;
+                    try {
+                        result = this.claimsDao.getClaimByLocation(coordinates);
+                    } catch (DaoException exception) {
+                        throw new CompletionException(exception);
+                    }
                     Claim claim = result.orElseGet(() -> new Claim(coordinates.getWorldUuid(), coordinates.getX(), coordinates.getZ(), 0));
                     this.claimsCache.putIfAbsent(coordinates, claim);
                     this.queueClaimFutures.remove(coordinates);
@@ -115,7 +121,12 @@ public class ClaimsManager {
             CompletableFuture<Set<ClaimHelper>> returnedFuture = this.queueHelperFutures.getOrDefault(coordinates, null);
             if (returnedFuture == null) {
                 returnedFuture = CompletableFuture.supplyAsync(() -> {
-                    Set<ClaimHelper> helpers = this.claimsHelperDao.getClaimHelpersByLocation(coordinates);
+                    Set<ClaimHelper> helpers;
+                    try {
+                        helpers = this.claimsHelperDao.getClaimHelpersByLocation(coordinates);
+                    } catch (DaoException exception) {
+                        throw new CompletionException(exception);
+                    }
                     this.helpersCache.putIfAbsent(coordinates, helpers);
                     this.queueHelperFutures.remove(coordinates);
                     return helpers.stream()
@@ -153,62 +164,70 @@ public class ClaimsManager {
 
 
 
-    public CompletableFuture<Boolean> saveClaim(Claim claim) {
-        return CompletableFuture.supplyAsync(() -> {
-            Claim savedClaim;
+    public CompletableFuture<Void> saveClaim(Claim claim) {
+        return this.fetchClaim(claim).thenAcceptAsync(savedClaim -> {
             try {
-                savedClaim = this.fetchClaim(claim).get();
-            } catch (InterruptedException | ExecutionException exception) {
-                throw new RuntimeException(exception);
+                if (savedClaim.getOwner().isPresent() || savedClaim.getFlags() != 0 ) {
+                    this.claimsDao.update(claim);
+                    this.claimsCache.put(claim, claim.clone());
+
+                } else if (claim.getOwner().isPresent() || claim.getFlags() != 0) {
+                    this.claimsDao.insert(claim);
+                    this.claimsCache.put(claim, claim.clone());
+
+                }
+            } catch (DaoException exception) {
+                throw new CompletionException(exception);
             }
-            if (savedClaim.getOwner().isPresent() || savedClaim.getFlags() != 0 ) {
-                this.claimsDao.update(claim);
-            } else if (claim.getOwner().isPresent() || claim.getFlags() != 0) {
-                this.claimsDao.insert(claim);
-            } else {
-                return false;
-            }
-            this.claimsCache.put(claim, claim.clone());
-            return true;
         });
     }
 
-    public CompletableFuture<Boolean> deleteClaim(Claim claim) {
-        return CompletableFuture.supplyAsync(() -> {
-            this.claimsDao.delete(claim);
+    public CompletableFuture<Void> deleteClaim(Claim claim) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                this.claimsDao.delete(claim);
+            } catch (DaoException exception) {
+                throw new CompletionException(exception);
+            }
             this.claimsCache.remove(claim);
-            return true;
         });
     }
 
-    public CompletableFuture<Boolean> saveClaimHelper(ChunkCoordinates coordinates, ClaimHelper helper) {
+    public CompletableFuture<Void> saveClaimHelper(ChunkCoordinates coordinates, ClaimHelper helper) {
         return this.fetchClaimHelpers(coordinates)
-                .thenApplyAsync(savedHelpers -> {
+                .thenAcceptAsync(savedHelpers -> {
                     Optional<ClaimHelper> savedHelper = savedHelpers.stream()
                             .filter(h -> h.getUuid().equals(helper.getUuid()))
                             .findAny();
-                    if (savedHelper.isPresent()) {
-                        this.claimsHelperDao.update(coordinates, helper);
-                        savedHelper.get().setPermissions(helper.getPermissions());
-                    } else if (helper.getPermissions() == 0) {
-                        return false;   // Don't save an empty helper that isn't in the database
-                    } else {
-                        this.claimsHelperDao.insert(coordinates, helper);
-                        savedHelpers.add(helper.clone());
+                    try {
+                        if (savedHelper.isPresent()) {
+                            this.claimsHelperDao.update(coordinates, helper);
+                            savedHelper.get().setPermissions(helper.getPermissions());
+                            this.helpersCache.put(coordinates, savedHelpers);
+
+                        } else if (helper.getPermissions() != 0) {
+                            this.claimsHelperDao.insert(coordinates, helper);
+                            savedHelpers.add(helper.clone());
+                            this.helpersCache.put(coordinates, savedHelpers);
+
+                        }
+                    } catch (DaoException exception) {
+                        throw new CompletionException(exception);
                     }
-                    this.helpersCache.put(coordinates, savedHelpers);
-                    return true;
                 });
     }
 
     public CompletableFuture<Void> deleteClaimHelper(ChunkCoordinates coordinates, ClaimHelper helper) {
-        return CompletableFuture.supplyAsync(() -> {
-            this.claimsHelperDao.delete(coordinates, helper);
+        return CompletableFuture.runAsync(() -> {
+            try {
+                this.claimsHelperDao.delete(coordinates, helper);
+            } catch (DaoException exception) {
+                throw new CompletionException(exception);
+            }
             Set<ClaimHelper> helpers = this.helpersCache.getOrDefault(coordinates, null);
             if (helpers != null) {
                 helpers.remove(helper);
             }
-            return null;
         });
     }
 

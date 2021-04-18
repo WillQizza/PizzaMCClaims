@@ -1,6 +1,6 @@
 package io.github.willqi.pizzamc.claims.api.homes;
 
-import io.github.willqi.pizzamc.claims.api.homes.exceptions.InvalidHomeNameException;
+import io.github.willqi.pizzamc.claims.api.exceptions.InvalidHomeNameException;
 
 import java.util.Objects;
 import java.util.UUID;

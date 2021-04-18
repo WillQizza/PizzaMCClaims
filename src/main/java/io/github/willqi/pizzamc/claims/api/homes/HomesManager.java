@@ -1,9 +1,11 @@
 package io.github.willqi.pizzamc.claims.api.homes;
 
+import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 import io.github.willqi.pizzamc.claims.api.homes.database.HomesDao;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class HomesManager {
@@ -44,8 +46,14 @@ public class HomesManager {
         } else {
             CompletableFuture<Map<String, Home>> returnedFuture = this.queueHomeFutures.getOrDefault(playerUuid, null);
             if (returnedFuture == null) {
+
                 returnedFuture = CompletableFuture.supplyAsync(() -> {
-                    Set<Home> homes = this.homesDao.getHomesByOwner(playerUuid);
+                    Set<Home> homes;
+                    try {
+                        homes = this.homesDao.getHomesByOwner(playerUuid);
+                    } catch (DaoException exception) {
+                        throw new RuntimeException(exception);
+                    }
                     Map<String, Home> mappedHomes = new ConcurrentHashMap<>();
                     for (Home home : homes) {
                         mappedHomes.put(home.getName(), home);
@@ -58,6 +66,7 @@ public class HomesManager {
                     return Collections.unmodifiableMap(returnedMappedHomes);
                 });
                 this.queueHomeFutures.put(playerUuid, returnedFuture);
+
             }
             return returnedFuture;
         }
@@ -84,28 +93,34 @@ public class HomesManager {
     }
 
     public CompletableFuture<Void> save (Home home) {
-        return this.fetchHomes(home.getOwnerUuid()).thenApplyAsync(homes -> {
+        return this.fetchHomes(home.getOwnerUuid()).thenAcceptAsync(homes -> {
             Map<String, Home> cachedHomes = Optional.ofNullable(this.cache.getOrDefault(home.getOwnerUuid(), null)).orElseGet(ConcurrentHashMap::new);
-            if (cachedHomes.containsKey(home.getName())) {
-                this.homesDao.update(home);
-            } else {
-                this.homesDao.insert(home);
+            try {
+                if (cachedHomes.containsKey(home.getName())) {
+                    this.homesDao.update(home);
+                } else {
+                    this.homesDao.insert(home);
+                }
+            } catch (DaoException exception) {
+                throw new CompletionException(exception);
             }
             cachedHomes = this.cache.getOrDefault(home.getOwnerUuid(), cachedHomes);
             cachedHomes.put(home.getName(), home.clone());
             this.cache.putIfAbsent(home.getOwnerUuid(), cachedHomes);
-            return null;
         });
     }
 
     public CompletableFuture<Void> delete(Home home) {
-        return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.runAsync(() -> {
             Map<String, Home> cachedHomes = this.cache.getOrDefault(home.getOwnerUuid(), null);
             if (cachedHomes != null) {
                 cachedHomes.remove(home.getName());
             }
-            this.homesDao.delete(home);
-            return null;
+            try {
+                this.homesDao.delete(home);
+            } catch (DaoException exception) {
+                throw new CompletionException(exception);
+            }
         });
     }
 

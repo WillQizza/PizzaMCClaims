@@ -5,7 +5,7 @@ import io.github.willqi.pizzamc.claims.plugin.Permissions;
 import io.github.willqi.pizzamc.claims.plugin.Utility;
 import io.github.willqi.pizzamc.claims.api.homes.Home;
 import io.github.willqi.pizzamc.claims.api.homes.HomesManager;
-import io.github.willqi.pizzamc.claims.api.homes.exceptions.InvalidHomeNameException;
+import io.github.willqi.pizzamc.claims.api.exceptions.InvalidHomeNameException;
 import io.github.willqi.pizzamc.claims.plugin.menus.types.HomeInformationType;
 import io.github.willqi.pizzamc.claims.plugin.menus.types.HomeSelectionMenuType;
 import org.bukkit.ChatColor;
