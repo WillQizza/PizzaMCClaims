@@ -78,41 +78,40 @@ public class HomeSelectionMenuType implements MenuType {
     public void onInventoryPickUp(InventoryClickEvent event) {
         if (event.getInventory().getHolder() instanceof Player) {
             Player player = (Player)event.getInventory().getHolder();
-            if (this.openInventories.containsKey(player.getUniqueId())) {
+            if (this.openInventories.containsKey(player.getUniqueId()) && event.getClickedInventory() != player.getInventory()) {
                 event.setCancelled(true);
-                if (event.getClickedInventory() != player.getInventory()) {
-                    int currentPage = this.openInventories.get(player.getUniqueId());
-                    switch (event.getSlot()) {
-                        case 0:
-                            if (event.getCurrentItem().getDurability() != (short)7) {
-                                // Go back button
-                                Map<String, Object> params = new HashMap<>();
-                                params.put("page", currentPage - 1);
-                                this.plugin.getMenuManager().showMenu(player, ID, params);
-                            }
-                            break;
-                        case 8:
-                            if (event.getCurrentItem().getDurability() != (short)7) {
-                                // Go forward button
-                                Map<String, Object> params = new HashMap<>();
-                                params.put("page", currentPage + 1);
-                                this.plugin.getMenuManager().showMenu(player, ID, params);
-                            }
-                            break;
-                        default:
-                            if (event.getSlot() > 8) {
-                                int homeIndex = event.getSlot() - 9 + this.openInventories.get(player.getUniqueId()) * 45;
-                                List<Home> homes = this.getHomes(player.getUniqueId());
-                                if (homes.size() > homeIndex) {
-                                    Home home = homes.get(homeIndex);
-                                    Map<String, Object> params = new HashMap<>();
-                                    params.put("home", home);
-                                    this.plugin.getMenuManager().showMenu(player, HomeInformationType.ID, params);
-                                }
-                            }
-                            break;
-                    }
 
+                int currentPage = this.openInventories.get(player.getUniqueId());
+                switch (event.getSlot()) {
+                    case 0:
+                        if (event.getCurrentItem().getDurability() != (short)7) {
+                            // Go back button
+                            Map<String, Object> params = new HashMap<>();
+                            params.put("page", currentPage - 1);
+                            this.plugin.getMenuManager().showMenu(player, ID, params);
+                        }
+                        break;
+                    case 8:
+                        if (event.getCurrentItem().getDurability() != (short)7) {
+                            // Go forward button
+                            Map<String, Object> params = new HashMap<>();
+                            params.put("page", currentPage + 1);
+                            this.plugin.getMenuManager().showMenu(player, ID, params);
+                        }
+                        break;
+                    default:
+                        if (event.getSlot() > 8) {
+                            int homeIndex = event.getSlot() - 9 + (currentPage - 1) * 45;
+                            System.out.println(homeIndex);
+                            List<Home> homes = this.getHomes(player.getUniqueId());
+                            if (homes.size() > homeIndex) {
+                                Home home = homes.get(homeIndex);
+                                Map<String, Object> params = new HashMap<>();
+                                params.put("home", home);
+                                this.plugin.getMenuManager().showMenu(player, HomeInformationType.ID, params);
+                            }
+                        }
+                        break;
                 }
             }
         }

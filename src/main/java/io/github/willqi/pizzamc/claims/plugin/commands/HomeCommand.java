@@ -10,6 +10,7 @@ import io.github.willqi.pizzamc.claims.plugin.menus.types.HomeInformationType;
 import io.github.willqi.pizzamc.claims.plugin.menus.types.HomeSelectionMenuType;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -87,6 +88,7 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                         ),
                         TeleportCause.PLUGIN
                 );
+                player.playSound(player.getLocation(), Sound.ENTITY_ENDERMEN_TELEPORT, 1f, 1f);
                 player.sendMessage(Utility.formatResponse("Homes", "Teleported!"));
 
                 break;
@@ -129,6 +131,7 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                         exception.printStackTrace();
                         player.sendMessage(Utility.formatResponse("Home", "An exception has occurred.", ChatColor.RED));
                     } else {
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
                         player.sendMessage(Utility.formatResponse("Home", "Home created!", ChatColor.GREEN));
                     }
                 });
@@ -195,12 +198,13 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                 Collections.sort(
                     StringUtil.copyPartialMatches(args[0], Arrays.asList("list", "teleport", "create", "destroy", "details"), options)
                 );
-
+                break;
             case 2:
                 switch (args[0].toLowerCase()) {
                     case "teleport":
                     case "destroy":
                     case "details":
+                        player.sendMessage(args[0]);
                         Optional<Map<String, Home>> homes = this.plugin.getHomesManager().getHomes(player.getUniqueId());
                         homes.ifPresent(homesMap -> Collections.sort(
                                 StringUtil.copyPartialMatches(
@@ -215,7 +219,7 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                         ));
                         break;
                 }
-
+                break;
         }
 
         return options;
