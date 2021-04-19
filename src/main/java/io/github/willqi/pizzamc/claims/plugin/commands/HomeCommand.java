@@ -47,7 +47,7 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
         Player player = (Player)commandSender;
 
         if (!player.hasPermission(Permissions.CAN_USE_HOME_COMMAND)) {
-            commandSender.sendMessage(Utility.formatResponse("Permissions", "You do not have permission to run this command.", ChatColor.RED));
+            commandSender.sendMessage(Utility.NO_PERMISSIONS_MESSAGE);
             return true;
         }
         if (args.length == 0) {
@@ -184,10 +184,10 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args) {
+    public List<String> onTabComplete(CommandSender commandSender, Command command, String label, String[] args) {
 
         if (!(commandSender instanceof Player)) {
-            return new ArrayList<>();
+            return null;
         }
         Player player = (Player)commandSender;
 

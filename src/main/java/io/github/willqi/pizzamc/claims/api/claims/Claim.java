@@ -4,20 +4,40 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public class Claim extends ChunkCoordinates implements Cloneable {
+public class Claim implements Cloneable {
+
+    private UUID worldUuid;
+    private int x;
+    private int z;
 
     private int flags;
     private UUID owner = null;
 
     public Claim (UUID worldUuid, int x, int z, int flags) {
-        super(worldUuid, x, z);
+        this.worldUuid = worldUuid;
+        this.x = x;
+        this.z = z;
         this.flags = flags;
     }
 
     public Claim (UUID worldUuid, int x, int z, UUID owner, int flags) {
-        super(worldUuid, x, z);
+        this.worldUuid = worldUuid;
+        this.x = x;
+        this.z = z;
         this.owner = owner;
         this.flags = flags;
+    }
+
+    public int getX() {
+        return this.x;
+    }
+
+    public int getZ() {
+        return this.z;
+    }
+
+    public UUID getWorldUuid() {
+        return this.worldUuid;
     }
 
     /**

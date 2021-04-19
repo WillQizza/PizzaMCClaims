@@ -9,8 +9,25 @@ commands:
     aliases: h
     description: Create and manage your homes!
     permission: pizzamcclaims.commands.home
+    usage: /home
+  claim:
+    description: Claim land around you!
+    permission: pizzamcclaims.commands.claim
+    usage: /claim
 
 permissions:
   pizzamcclaims.commands.home:
     default: op
     description: Gives access to /home
+  pizzamcclaims.commands.claim.claim:
+    default: op
+    description: Gives access to /claim add and /claim remove
+  pizzamcclaims.commands.claim.flags:
+    default: op
+    description: Gives access to /claim flags
+  pizzamcclaims.commands.claim.helpers:
+    default: op
+    description: Gives access to all /claim helpers related commands
+  pizzamcclaims.commands.claim.admin:
+    default: op
+    description: Bypass any checks for claim commands

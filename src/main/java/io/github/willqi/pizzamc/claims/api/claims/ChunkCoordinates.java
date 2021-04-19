@@ -15,6 +15,10 @@ public class ChunkCoordinates {
         this.z = z;
     }
 
+    public static ChunkCoordinates fromClaim(Claim claim) {
+        return new ChunkCoordinates(claim.getWorldUuid(), claim.getX(), claim.getZ());
+    }
+
     public int getX() {
         return this.x;
     }

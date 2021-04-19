@@ -13,7 +13,7 @@ import java.util.UUID;
 
 public class SQLClaimsHelperDao implements ClaimsHelperDao {
 
-    private static final String STMT_CREATE_HELPERS_TABLE = "CREATE TABLE IF NOT EXISTS claims_helpers (" +
+    private static final String STMT_CREATE_HELPERS_TABLE = "CREATE TABLE IF NOT EXISTS claim_helpers (" +
             "worldUuid VARCHAR(36) NOT NULL," +
             "x INT NOT NULL," +
             "z INT NOT NULL," +

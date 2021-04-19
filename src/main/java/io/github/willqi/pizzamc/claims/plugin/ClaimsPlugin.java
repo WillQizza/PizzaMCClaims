@@ -5,6 +5,7 @@ import io.github.willqi.pizzamc.claims.api.daosources.DaoSource;
 import io.github.willqi.pizzamc.claims.api.daosources.SQLDaoSource;
 import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 import io.github.willqi.pizzamc.claims.api.homes.HomesManager;
+import io.github.willqi.pizzamc.claims.plugin.commands.ClaimCommand;
 import io.github.willqi.pizzamc.claims.plugin.commands.HomeCommand;
 import io.github.willqi.pizzamc.claims.plugin.listeners.ClaimListener;
 import io.github.willqi.pizzamc.claims.plugin.listeners.HomeListener;
@@ -79,7 +80,7 @@ public class ClaimsPlugin extends JavaPlugin {
 
     private void registerEvents() {
         this.getServer().getPluginManager().registerEvents(new HomeListener(this), this);
-        this.getServer().getPluginManager().registerEvents(new ClaimListener(this.getClaimsManager()), this);
+        this.getServer().getPluginManager().registerEvents(new ClaimListener(this), this);
         this.getServer().getPluginManager().registerEvents(this.getMenuManager(), this);
     }
 
@@ -87,6 +88,10 @@ public class ClaimsPlugin extends JavaPlugin {
         HomeCommand homeCommand = new HomeCommand(this);
         this.getCommand("home").setExecutor(homeCommand);
         this.getCommand("home").setTabCompleter(homeCommand);
+
+        ClaimCommand claimCommand = new ClaimCommand(this);
+        this.getCommand("claim").setExecutor(claimCommand);
+        this.getCommand("claim").setTabCompleter(claimCommand);
     }
 
     private void registerMenuTypes() {

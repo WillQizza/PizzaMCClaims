@@ -64,12 +64,11 @@ public class SQLClaimsDao implements ClaimsDao {
             results = stmt.executeQuery();
 
             if (results.next()) {
-                UUID worldUuid = UUID.fromString(results.getString("worldUuid"));
-                int x = results.getInt("x");
-                int z = results.getInt("z");
+                UUID worldUuid = coordinates.getWorldUuid();
+                int x = coordinates.getX();
+                int z = coordinates.getZ();
                 int flags = results.getInt("flags");
                 String ownerUuidStr = results.getString("ownerUuid");
-
                 if (ownerUuidStr == null) {
                     claim = new Claim(worldUuid, x, z, flags);
                 } else {

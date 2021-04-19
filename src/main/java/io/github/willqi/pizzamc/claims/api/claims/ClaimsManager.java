@@ -144,15 +144,14 @@ public class ClaimsManager {
 
 
     public CompletableFuture<Void> saveClaim(Claim claim) {
-        return this.fetchClaim(claim).thenAcceptAsync(savedClaim -> {
+        return this.fetchClaim(ChunkCoordinates.fromClaim(claim)).thenAcceptAsync(savedClaim -> {
             try {
                 if (savedClaim.getOwner().isPresent() || savedClaim.getFlags() != 0 ) {
                     this.claimsDao.update(claim);
-                    this.claimsCache.put(claim, claim.clone());
-
+                    this.claimsCache.put(ChunkCoordinates.fromClaim(claim), claim.clone());
                 } else if (claim.getOwner().isPresent() || claim.getFlags() != 0) {
                     this.claimsDao.insert(claim);
-                    this.claimsCache.put(claim, claim.clone());
+                    this.claimsCache.put(ChunkCoordinates.fromClaim(claim), claim.clone());
 
                 }
             } catch (DaoException exception) {
@@ -162,8 +161,8 @@ public class ClaimsManager {
     }
 
     public CompletableFuture<Void> deleteClaim(Claim claim) {
-        return this.fetchClaimHelpers(claim)
-                .thenAcceptAsync(helpers -> helpers.forEach(helper -> this.deleteClaimHelper(claim, helper)))
+        return this.fetchClaimHelpers(ChunkCoordinates.fromClaim(claim))
+                .thenAcceptAsync(helpers -> helpers.forEach(helper -> this.deleteClaimHelper(ChunkCoordinates.fromClaim(claim), helper)))
                 .thenRunAsync(() -> {
                     try {
                         this.claimsDao.delete(claim);
