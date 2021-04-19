@@ -70,9 +70,9 @@ public class SQLClaimsDao implements ClaimsDao {
                 int flags = results.getInt("flags");
                 String ownerUuidStr = results.getString("ownerUuid");
                 if (ownerUuidStr == null) {
-                    claim = new Claim(worldUuid, x, z, flags);
+                    claim = new Claim(new ChunkCoordinates(worldUuid, x, z), flags);
                 } else {
-                    claim = new Claim(worldUuid, x, z, UUID.fromString(ownerUuidStr), flags);
+                    claim = new Claim(new ChunkCoordinates(worldUuid, x, z), UUID.fromString(ownerUuidStr), flags);
                 }
             }
         } catch (SQLException exception) {
@@ -98,9 +98,9 @@ public class SQLClaimsDao implements ClaimsDao {
         try {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_INSERT_CLAIM);
-            stmt.setString(1, claim.getWorldUuid().toString());
-            stmt.setInt(2, claim.getX());
-            stmt.setInt(3, claim.getZ());
+            stmt.setString(1, claim.getCoordinates().getWorldUuid().toString());
+            stmt.setInt(2, claim.getCoordinates().getX());
+            stmt.setInt(3, claim.getCoordinates().getZ());
             Optional<UUID> claimOwner = claim.getOwner();
             if (claimOwner.isPresent()) {
                 stmt.setString(4, claimOwner.get().toString());
@@ -136,9 +136,9 @@ public class SQLClaimsDao implements ClaimsDao {
                 stmt.setString(1, null);
             }
             stmt.setInt(2, claim.getFlags());
-            stmt.setString(3, claim.getWorldUuid().toString());
-            stmt.setInt(4, claim.getX());
-            stmt.setInt(5, claim.getZ());
+            stmt.setString(3, claim.getCoordinates().getWorldUuid().toString());
+            stmt.setInt(4, claim.getCoordinates().getX());
+            stmt.setInt(5, claim.getCoordinates().getZ());
             stmt.execute();
 
         } catch (SQLException exception) {
@@ -160,9 +160,9 @@ public class SQLClaimsDao implements ClaimsDao {
         try {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_DELETE_CLAIM);
-            stmt.setString(1, claim.getWorldUuid().toString());
-            stmt.setInt(2, claim.getX());
-            stmt.setInt(3, claim.getZ());
+            stmt.setString(1, claim.getCoordinates().getWorldUuid().toString());
+            stmt.setInt(2, claim.getCoordinates().getX());
+            stmt.setInt(3, claim.getCoordinates().getZ());
             stmt.execute();
 
         } catch (SQLException exception) {

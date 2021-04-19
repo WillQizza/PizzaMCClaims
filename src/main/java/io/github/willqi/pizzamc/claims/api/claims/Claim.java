@@ -6,38 +6,24 @@ import java.util.UUID;
 
 public class Claim implements Cloneable {
 
-    private UUID worldUuid;
-    private int x;
-    private int z;
+    private ChunkCoordinates coordinates;
 
     private int flags;
     private UUID owner = null;
 
-    public Claim (UUID worldUuid, int x, int z, int flags) {
-        this.worldUuid = worldUuid;
-        this.x = x;
-        this.z = z;
+    public Claim (ChunkCoordinates coordinates, int flags) {
+        this.coordinates = coordinates;
         this.flags = flags;
     }
 
-    public Claim (UUID worldUuid, int x, int z, UUID owner, int flags) {
-        this.worldUuid = worldUuid;
-        this.x = x;
-        this.z = z;
+    public Claim (ChunkCoordinates coordinates, UUID owner, int flags) {
+        this.coordinates = coordinates;
         this.owner = owner;
         this.flags = flags;
     }
 
-    public int getX() {
-        return this.x;
-    }
-
-    public int getZ() {
-        return this.z;
-    }
-
-    public UUID getWorldUuid() {
-        return this.worldUuid;
+    public ChunkCoordinates getCoordinates() {
+        return this.coordinates;
     }
 
     /**
@@ -82,23 +68,23 @@ public class Claim implements Cloneable {
             return (Claim)super.clone();
         } catch (CloneNotSupportedException exception) {
             if (this.getOwner().isPresent()) {
-                return new Claim(this.getWorldUuid(), this.getX(), this.getZ(), this.owner, this.getFlags());
+                return new Claim(this.coordinates, this.owner, this.getFlags());
             } else {
-                return new Claim(this.getWorldUuid(), this.getX(), this.getZ(), this.getFlags());
+                return new Claim(this.coordinates, this.getFlags());
             }
         }
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.getX(), this.getZ(), this.getWorldUuid());
+        return Objects.hash(this.coordinates);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Claim) {
             Claim claimObj = (Claim)obj;
-            return claimObj.getX() == this.getX() && claimObj.getZ() == this.getZ();
+            return claimObj.coordinates.equals(this.coordinates);
         } else {
             return false;
         }

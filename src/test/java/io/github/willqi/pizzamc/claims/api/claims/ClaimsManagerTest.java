@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutionException;
 public class ClaimsManagerTest {
 
     private static final UUID NULL_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+    private static final ChunkCoordinates DEFAULT_COORDINATES = new ChunkCoordinates(NULL_UUID, 0, 0);
 
     //
     // Claim tests
@@ -24,7 +25,7 @@ public class ClaimsManagerTest {
 
     @Test
     public void fetchClaimShouldQueryDaoWithNoCacheData() {
-        Claim daoClaim = new Claim(NULL_UUID, 0, 0, 0);
+        Claim daoClaim = new Claim(DEFAULT_COORDINATES, 0);
 
         TestClaimsDao mockClaimsDao = spy(new TestClaimsDao(){
 
@@ -38,18 +39,18 @@ public class ClaimsManagerTest {
         ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimsHelperDao());
 
         try {
-            claimsManager.fetchClaim(ChunkCoordinates.fromClaim(daoClaim)).get();
-            claimsManager.fetchClaim(ChunkCoordinates.fromClaim(daoClaim)).get();
+            claimsManager.fetchClaim(daoClaim.getCoordinates()).get();
+            claimsManager.fetchClaim(daoClaim.getCoordinates()).get();
         } catch (InterruptedException | ExecutionException exception) {
             throw new AssertionError("fetchClaim threw an error somehow", exception);
         }
 
-        verify(mockClaimsDao, times(1)).getClaimByLocation(ChunkCoordinates.fromClaim(daoClaim));
+        verify(mockClaimsDao, times(1)).getClaimByLocation(daoClaim.getCoordinates());
     }
 
     @Test
     public void fetchAndGetClaimShouldRetrieveCacheDataWhenAvailable() throws DaoException {
-        Claim daoClaim = new Claim(NULL_UUID, 0, 0, 0);
+        Claim daoClaim = new Claim(DEFAULT_COORDINATES, 0);
 
         ClaimsDao mockClaimsDao = spy(new TestClaimsDao(){
 
@@ -79,13 +80,13 @@ public class ClaimsManagerTest {
 
     @Test
     public void saveClaimShouldNotSaveEmptyClaims() {
-        Claim emptyClaim = new Claim(NULL_UUID, 0, 0, 0);
+        Claim emptyClaim = new Claim(DEFAULT_COORDINATES, 0);
 
         TestClaimsDao mockClaimsDao = spy(new TestClaimsDao(){
 
             @Override
             public Optional<Claim> getClaimByLocation(ChunkCoordinates location) {
-                return Optional.of(new Claim(location.getWorldUuid(), location.getX(), location.getZ(), 0));
+                return Optional.of(new Claim(location, 0));
             }
 
         });
@@ -104,12 +105,12 @@ public class ClaimsManagerTest {
 
     @Test
     public void savingEmptyClaimShouldOverwriteExistingClaims() throws DaoException {
-        Claim daoClaim = new Claim(NULL_UUID, 0, 0, 1);
+        Claim daoClaim = new Claim(DEFAULT_COORDINATES, 1);
         ClaimsDao mockClaimsDao = spy(new TestClaimsDao() {
 
             @Override
             public Optional<Claim> getClaimByLocation(ChunkCoordinates location) {
-                return Optional.of(new Claim(location.getWorldUuid(), location.getX(), location.getZ(), 0));
+                return Optional.of(new Claim(location, 0));
             }
 
             @Override
@@ -132,13 +133,13 @@ public class ClaimsManagerTest {
 
     @Test
     public void saveClaimShouldUpdateIfExistingClaimProvided() throws DaoException {
-        Claim daoClaim = new Claim(NULL_UUID, 0, 0, NULL_UUID, 0);
+        Claim daoClaim = new Claim(DEFAULT_COORDINATES, NULL_UUID, 0);
 
         ClaimsDao mockClaimsDao = spy(new TestClaimsDao() {
 
             @Override
             public Optional<Claim> getClaimByLocation(ChunkCoordinates location) {
-                return Optional.of(new Claim(location.getWorldUuid(), location.getX(), location.getZ(), 0));
+                return Optional.of(new Claim(location, 0));
             }
 
         });
@@ -158,13 +159,13 @@ public class ClaimsManagerTest {
 
     @Test
     public void saveClaimShouldInsertIfNoExistingClaimFound() throws DaoException {
-        Claim daoClaim = new Claim(NULL_UUID, 0, 0, 1);
+        Claim daoClaim = new Claim(DEFAULT_COORDINATES, 1);
 
         ClaimsDao mockClaimsDao = spy(new TestClaimsDao() {
 
             @Override
             public Optional<Claim> getClaimByLocation(ChunkCoordinates location) {
-                return Optional.of(new Claim(location.getWorldUuid(), location.getX(), location.getZ(), 0));
+                return Optional.of(new Claim(location, 0));
             }
 
         });
@@ -181,13 +182,13 @@ public class ClaimsManagerTest {
 
     @Test
     public void fetchAndGetClaimShouldReturnAClone() {
-        Claim daoClaim = new Claim(NULL_UUID, 0, 0, 1);
+        Claim daoClaim = new Claim(DEFAULT_COORDINATES, 1);
 
         ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao() {
 
             @Override
             public Optional<Claim> getClaimByLocation(ChunkCoordinates location) {
-                return Optional.of(new Claim(location.getWorldUuid(), location.getX(), location.getZ(), 0));
+                return Optional.of(new Claim(location, 0));
             }
 
         }, new TestClaimsHelperDao());
@@ -196,18 +197,18 @@ public class ClaimsManagerTest {
         try {
             claimsManager.saveClaim(daoClaim).get();
             daoClaim.setFlags(2);
-            Claim fetchedClaim = claimsManager.fetchClaim(ChunkCoordinates.fromClaim(daoClaim)).get();
+            Claim fetchedClaim = claimsManager.fetchClaim(daoClaim.getCoordinates()).get();
             assertNotEquals(daoClaim.getFlags(), fetchedClaim.getFlags());
 
             // Ensure that the fetched claim returns a cloned claim and that it does not modify the original
             fetchedClaim.setFlags(3);
-            assertNotEquals(fetchedClaim.getFlags(), claimsManager.fetchClaim(ChunkCoordinates.fromClaim(daoClaim)).get().getFlags());
+            assertNotEquals(fetchedClaim.getFlags(), claimsManager.fetchClaim(daoClaim.getCoordinates()).get().getFlags());
         } catch (InterruptedException | ExecutionException exception) {
             throw new AssertionError("fetchClaim threw an error somehow", exception);
         }
 
         // Check flags of cached claim to ensure they are different
-        Optional<Claim> cachedClaim = claimsManager.getClaim(ChunkCoordinates.fromClaim(daoClaim));
+        Optional<Claim> cachedClaim = claimsManager.getClaim(daoClaim.getCoordinates());
         if (!cachedClaim.isPresent()) {
             throw new AssertionError("Cached claim was not present for some reason");
         }
@@ -215,7 +216,7 @@ public class ClaimsManagerTest {
 
         // The cached claim should be a duplicate of the original claim
         cachedClaim.get().setFlags(daoClaim.getFlags());
-        assertNotEquals(cachedClaim.get().getFlags(), claimsManager.getClaim(ChunkCoordinates.fromClaim(daoClaim)).get().getFlags());
+        assertNotEquals(cachedClaim.get().getFlags(), claimsManager.getClaim(daoClaim.getCoordinates()).get().getFlags());
 
     }
 
@@ -358,7 +359,7 @@ public class ClaimsManagerTest {
         ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimsHelperDao());
         try {
             claimsManager.saveClaimHelper(coordinates, helper).get();
-            claimsManager.deleteClaim(new Claim(coordinates.getWorldUuid(), coordinates.getX(), coordinates.getZ(), 0)).get();
+            claimsManager.deleteClaim(new Claim(coordinates, 0)).get();
         } catch (InterruptedException | ExecutionException exception) {
             throw new AssertionError("This test threw an exception somehow", exception);
         }

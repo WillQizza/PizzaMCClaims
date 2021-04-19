@@ -58,7 +58,7 @@ public class ClaimsManager {
                     } catch (DaoException exception) {
                         throw new CompletionException(exception);
                     }
-                    Claim claim = result.orElseGet(() -> new Claim(coordinates.getWorldUuid(), coordinates.getX(), coordinates.getZ(), 0));
+                    Claim claim = result.orElseGet(() -> new Claim(coordinates, 0));
                     this.claimsCache.putIfAbsent(coordinates, claim);
                     this.queueClaimFutures.remove(coordinates);
                     return claim.clone();
@@ -144,14 +144,14 @@ public class ClaimsManager {
 
 
     public CompletableFuture<Void> saveClaim(Claim claim) {
-        return this.fetchClaim(ChunkCoordinates.fromClaim(claim)).thenAcceptAsync(savedClaim -> {
+        return this.fetchClaim(claim.getCoordinates()).thenAcceptAsync(savedClaim -> {
             try {
                 if (savedClaim.getOwner().isPresent() || savedClaim.getFlags() != 0 ) {
                     this.claimsDao.update(claim);
-                    this.claimsCache.put(ChunkCoordinates.fromClaim(claim), claim.clone());
+                    this.claimsCache.put(claim.getCoordinates(), claim.clone());
                 } else if (claim.getOwner().isPresent() || claim.getFlags() != 0) {
                     this.claimsDao.insert(claim);
-                    this.claimsCache.put(ChunkCoordinates.fromClaim(claim), claim.clone());
+                    this.claimsCache.put(claim.getCoordinates(), claim.clone());
 
                 }
             } catch (DaoException exception) {
@@ -161,15 +161,15 @@ public class ClaimsManager {
     }
 
     public CompletableFuture<Void> deleteClaim(Claim claim) {
-        return this.fetchClaimHelpers(ChunkCoordinates.fromClaim(claim))
-                .thenAcceptAsync(helpers -> helpers.forEach(helper -> this.deleteClaimHelper(ChunkCoordinates.fromClaim(claim), helper)))
+        return this.fetchClaimHelpers(claim.getCoordinates())
+                .thenAcceptAsync(helpers -> helpers.forEach(helper -> this.deleteClaimHelper(claim.getCoordinates(), helper)))
                 .thenRunAsync(() -> {
                     try {
                         this.claimsDao.delete(claim);
                     } catch (DaoException exception) {
                         throw new CompletionException(exception);
                     }
-                    this.claimsCache.remove(claim);
+                    this.claimsCache.put(claim.getCoordinates(), new Claim(claim.getCoordinates(), null, 0));
                 });
     }
 

@@ -8,9 +8,12 @@ import java.util.UUID;
 
 public class ClaimTest {
 
+    private static final UUID NULL_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+    private static final ChunkCoordinates DEFAULT_COORDINATES = new ChunkCoordinates(NULL_UUID, 0, 0);
+
     @Test
     public void addFlagShouldNotReaddAFlag() {
-        Claim claim = new Claim(UUID.randomUUID(), 0, 0, 0);
+        Claim claim = new Claim(DEFAULT_COORDINATES, 0);
         claim.addFlag(Claim.Flags.ALWAYS_DAY);
         claim.addFlag(Claim.Flags.ALWAYS_DAY);
         assertEquals(Claim.Flags.ALWAYS_DAY.getValue(), claim.getFlags());
@@ -18,7 +21,7 @@ public class ClaimTest {
 
     @Test
     public void removeFlagShouldNotRemoveAFlagThatDoesNotExist() {
-        Claim claim = new Claim(UUID.randomUUID(), 0, 0, 0);
+        Claim claim = new Claim(DEFAULT_COORDINATES, 0);
         claim.removeFlag(Claim.Flags.ALWAYS_DAY);
         assertEquals(0, claim.getFlags());
 
