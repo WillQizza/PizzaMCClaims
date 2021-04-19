@@ -14,19 +14,19 @@ public class ClaimTest {
     @Test
     public void addFlagShouldNotReaddAFlag() {
         Claim claim = new Claim(DEFAULT_COORDINATES, 0);
-        claim.addFlag(Claim.Flags.ALWAYS_DAY);
-        claim.addFlag(Claim.Flags.ALWAYS_DAY);
-        assertEquals(Claim.Flags.ALWAYS_DAY.getValue(), claim.getFlags());
+        claim.addFlag(Claim.Flag.ALWAYS_DAY);
+        claim.addFlag(Claim.Flag.ALWAYS_DAY);
+        assertEquals(Claim.Flag.ALWAYS_DAY.getValue(), claim.getFlags());
     }
 
     @Test
     public void removeFlagShouldNotRemoveAFlagThatDoesNotExist() {
         Claim claim = new Claim(DEFAULT_COORDINATES, 0);
-        claim.removeFlag(Claim.Flags.ALWAYS_DAY);
+        claim.removeFlag(Claim.Flag.ALWAYS_DAY);
         assertEquals(0, claim.getFlags());
 
-        claim.addFlag(Claim.Flags.ALWAYS_DAY);
-        claim.removeFlag(Claim.Flags.ALWAYS_DAY);
+        claim.addFlag(Claim.Flag.ALWAYS_DAY);
+        claim.removeFlag(Claim.Flag.ALWAYS_DAY);
         assertEquals(0, claim.getFlags());
     }
 

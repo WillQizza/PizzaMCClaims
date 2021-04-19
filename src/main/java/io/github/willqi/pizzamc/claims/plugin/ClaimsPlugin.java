@@ -10,9 +10,7 @@ import io.github.willqi.pizzamc.claims.plugin.commands.HomeCommand;
 import io.github.willqi.pizzamc.claims.plugin.listeners.ClaimListener;
 import io.github.willqi.pizzamc.claims.plugin.listeners.HomeListener;
 import io.github.willqi.pizzamc.claims.plugin.menus.MenuManager;
-import io.github.willqi.pizzamc.claims.plugin.menus.types.DeleteHomeConfirmationType;
-import io.github.willqi.pizzamc.claims.plugin.menus.types.HomeInformationType;
-import io.github.willqi.pizzamc.claims.plugin.menus.types.HomeSelectionMenuType;
+import io.github.willqi.pizzamc.claims.plugin.menus.types.*;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Level;
@@ -98,6 +96,9 @@ public class ClaimsPlugin extends JavaPlugin {
         this.menuManager.register(HomeSelectionMenuType.ID, new HomeSelectionMenuType(this));
         this.menuManager.register(HomeInformationType.ID, new HomeInformationType(this));
         this.menuManager.register(DeleteHomeConfirmationType.ID, new DeleteHomeConfirmationType(this));
+
+        this.menuManager.register(ClaimFlagsType.ID, new ClaimFlagsType(this));
+        this.menuManager.register(ClaimHelperSelectionMenuType.ID, new ClaimHelperSelectionMenuType(this));
     }
 
 }

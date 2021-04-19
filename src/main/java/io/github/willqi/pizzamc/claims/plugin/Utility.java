@@ -1,6 +1,11 @@
 package io.github.willqi.pizzamc.claims.plugin;
 
+import net.minecraft.server.v1_12_R1.NBTTagCompound;
 import org.bukkit.ChatColor;
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.function.Consumer;
 
 public class Utility {
 
@@ -15,6 +20,17 @@ public class Utility {
 
     public static String formatResponse (String header, String text, ChatColor color) {
         return String.format("%s%s> %s%s", HEADER_COLOR, header, color.toString(), text);
+    }
+
+    public static NBTTagCompound getNMSTag(ItemStack itemStack) {
+        net.minecraft.server.v1_12_R1.ItemStack nmsItem = CraftItemStack.asNMSCopy(itemStack);
+        return nmsItem.hasTag() ? nmsItem.getTag() : new NBTTagCompound();
+    }
+
+    public static ItemStack applyNMSTag(ItemStack itemStack, NBTTagCompound tag) {
+        net.minecraft.server.v1_12_R1.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        nmsItemStack.setTag(tag);
+        return CraftItemStack.asBukkitCopy(nmsItemStack);
     }
 
 }

@@ -43,7 +43,7 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         Player player = (Player)commandSender;
-        boolean playerIsClaimAdmin = false; //player.hasPermission(Permissions.HAS_CLAIM_ADMIN);
+        boolean playerIsClaimAdmin = player.hasPermission(Permissions.HAS_CLAIM_ADMIN);
 
         if (
                 !playerIsClaimAdmin &&
@@ -141,11 +141,7 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
-                if (!currentClaim.get().getOwner().isPresent()) {
-                    player.sendMessage(Utility.formatResponse("Claims", "Nobody has claimed this chunk!", ChatColor.RED));
-                    return true;
-                }
-                if (currentClaim.get().getOwner().get().equals(player.getUniqueId()) && !playerIsClaimAdmin) {
+                if ((!currentClaim.get().getOwner().isPresent()) || (currentClaim.get().getOwner().get().equals(player.getUniqueId()) && !playerIsClaimAdmin)) {
                     player.sendMessage(Utility.formatResponse("Claims", "Sorry, you do not own this claim.", ChatColor.RED));
                     return true;
                 }
@@ -162,11 +158,7 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
-                if (!currentClaim.get().getOwner().isPresent()) {
-                    player.sendMessage(Utility.formatResponse("Claims", "Nobody has claimed this chunk!", ChatColor.RED));
-                    return true;
-                }
-                if (currentClaim.get().getOwner().get().equals(player.getUniqueId()) && !playerIsClaimAdmin) {
+                if ((!currentClaim.get().getOwner().isPresent()) || (currentClaim.get().getOwner().get().equals(player.getUniqueId()) && !playerIsClaimAdmin)) {
                     player.sendMessage(Utility.formatResponse("Claims", "Sorry, you do not own this claim.", ChatColor.RED));
                     return true;
                 }

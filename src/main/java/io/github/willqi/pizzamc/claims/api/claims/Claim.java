@@ -46,19 +46,19 @@ public class Claim implements Cloneable {
         this.flags = flags;
     }
 
-    public void addFlag(Flags flag) {
+    public void addFlag(Flag flag) {
         if ((this.flags & flag.getValue()) == 0) {
             this.flags += flag.getValue();
         }
     }
 
-    public void removeFlag(Flags flag) {
+    public void removeFlag(Flag flag) {
         if ((this.flags & flag.getValue()) != 0) {
             this.flags -= flag.getValue();
         }
     }
 
-    public boolean hasFlag(Flags flag) {
+    public boolean hasFlag(Flag flag) {
         return (this.flags & flag.getValue()) != 0;
     }
 
@@ -90,24 +90,44 @@ public class Claim implements Cloneable {
         }
     }
 
-    public enum Flags {
-        ALWAYS_DAY(generateValue(0)),       // Is it always day?
-        MOB_SPAWNING(generateValue(1)),     // Can mobs spawn?
-        PVP(generateValue(2)),              // Is PVP enabled?
-        WHITELIST(generateValue(3));        // Can only select individuals enter?
+    public enum Flag {
+        ALWAYS_DAY("Always Day", "Keep your claim always sunny!", generateValue(0)),       // Is it always day?
+        DISABLE_MOB_SPAWNING("Disable Mob Spawning", "Disable mobs from spawning in your claim!", generateValue(1)),     // Can mobs spawn?
+        DENY_PVP("No PVP", "Prevent players from attacking each other in your claim!", generateValue(2));              // Is PVP enabled?
 
+        private final String title;
+        private final String description;
         private final int value;
 
-        Flags(final int value) {
+        Flag(String title, String description, int value) {
+            this.title = title;
+            this.description = description;
             this.value = value;
         }
 
+        public String getTitle() {
+            return this.title;
+        }
+
+        public String getDescription() {
+            return this.description;
+        }
+
         public int getValue() {
-            return value;
+            return this.value;
         }
 
         private static int generateValue(final int index) {
             return (int)Math.pow(2, index);
+        }
+
+        public static Flag getFlagByValue(int value) {
+            for (Flag flag : Flag.values()) {
+                if (flag.getValue() == value) {
+                    return flag;
+                }
+            }
+            return null;
         }
     }
 
