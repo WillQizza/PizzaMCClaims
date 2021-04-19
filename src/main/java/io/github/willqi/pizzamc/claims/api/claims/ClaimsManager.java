@@ -16,27 +16,6 @@ import java.util.stream.Collectors;
  */
 public class ClaimsManager {
 
-    private static final String CREATE_CLAIMS_TABLE = "CREATE TABLE IF NOT EXISTS claims (" +
-                                                        "id INT PRIMARY KEY," +
-                                                        "level VARCHAR(36)," +                // UUID of the level
-                                                        "x INT," +                             // Chunk X
-                                                        "z INT," +                             // Chunk Y
-                                                        "flags INT," +                         // Extra features for the chunk
-                                                        "player VARCHAR(36)" +                 // UUID of the owner of the chunk
-                                                        ")";
-    private static final String CREATE_CLAIM_HELPERS_TABLE = "CREATE TABLE IF NOT EXISTS claim_helpers (" +
-                                                        "id INT PRIMARY KEY," +
-                                                        "claim_id INT," +               // Corresponding claim id
-                                                        "permissions INT," +            // Permissions the helper has.
-                                                        "player VARCHAR(36)" +          // UUID of the owner of the chunk
-                                                        ")";
-
-    private static final String SELECT_CLAIMS_ID = "SELECT IFNULL(MAX(id) + 1, 0) AS claim_id FROM claims";
-    private static final String SELECT_CLAIM_HELPERS_ID = "SELECT IFNULL(MAX(id) + 1, 0) AS helper_id FROM claim_helpers";
-
-    private static final String SELECT_CLAIMS = "SELECT * FROM claims";
-    private static final String SELECT_CLAIM_HELPERS = "SELECT * FROM claim_helpers";
-
     private final Map<ChunkCoordinates, Claim> claimsCache;
     private final Map<ChunkCoordinates, Set<ClaimHelper>> helpersCache;
 
@@ -72,7 +51,7 @@ public class ClaimsManager {
             // Ensure we don't run unnecessary queries
             CompletableFuture<Claim> returnedFuture = this.queueClaimFutures.getOrDefault(coordinates, null);
             if (returnedFuture == null) {
-                returnedFuture = CompletableFuture.supplyAsync(() -> {
+                returnedFuture = this.fetchClaimHelpers(coordinates).thenApplyAsync(helpers -> {
                     Optional<Claim> result;
                     try {
                         result = this.claimsDao.getClaimByLocation(coordinates);
@@ -183,14 +162,16 @@ public class ClaimsManager {
     }
 
     public CompletableFuture<Void> deleteClaim(Claim claim) {
-        return CompletableFuture.runAsync(() -> {
-            try {
-                this.claimsDao.delete(claim);
-            } catch (DaoException exception) {
-                throw new CompletionException(exception);
-            }
-            this.claimsCache.remove(claim);
-        });
+        return this.fetchClaimHelpers(claim)
+                .thenAcceptAsync(helpers -> helpers.forEach(helper -> this.deleteClaimHelper(claim, helper)))
+                .thenRunAsync(() -> {
+                    try {
+                        this.claimsDao.delete(claim);
+                    } catch (DaoException exception) {
+                        throw new CompletionException(exception);
+                    }
+                    this.claimsCache.remove(claim);
+                });
     }
 
     public CompletableFuture<Void> saveClaimHelper(ChunkCoordinates coordinates, ClaimHelper helper) {

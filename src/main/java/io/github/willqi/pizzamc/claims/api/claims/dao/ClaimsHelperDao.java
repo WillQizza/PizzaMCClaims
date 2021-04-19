@@ -10,9 +10,9 @@ public interface ClaimsHelperDao {
 
     Set<ClaimHelper> getClaimHelpersByLocation(ChunkCoordinates location) throws DaoException;
 
-    void delete(ChunkCoordinates claimCoords, ClaimHelper helper) throws DaoException;
-    void update(ChunkCoordinates claimCoords, ClaimHelper helper) throws DaoException;
     void insert(ChunkCoordinates claimCoords, ClaimHelper helper) throws DaoException;
+    void update(ChunkCoordinates claimCoords, ClaimHelper helper) throws DaoException;
+    void delete(ChunkCoordinates claimCoords, ClaimHelper helper) throws DaoException;
 
 
 }

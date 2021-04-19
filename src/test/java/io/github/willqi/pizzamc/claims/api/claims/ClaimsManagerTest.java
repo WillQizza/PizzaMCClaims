@@ -350,6 +350,26 @@ public class ClaimsManagerTest {
         verify(mockClaimsHelperDao, times(0)).update(coordinates, helper);
     }
 
+    @Test
+    public void deletingAClaimShouldDeleteAllHelpers() throws DaoException {
+        ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
+        ClaimHelper helper = new ClaimHelper(NULL_UUID, 0);
+
+        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimsHelperDao());
+        try {
+            claimsManager.saveClaimHelper(coordinates, helper).get();
+            claimsManager.deleteClaim(new Claim(coordinates.getWorldUuid(), coordinates.getX(), coordinates.getZ(), 0)).get();
+        } catch (InterruptedException | ExecutionException exception) {
+            throw new AssertionError("This test threw an exception somehow", exception);
+        }
+        Optional<Set<ClaimHelper>> helpers = claimsManager.getClaimHelpers(coordinates);
+        if (!helpers.isPresent()) {
+            throw new AssertionError("Cached helpers was not present");
+        }
+        assertEquals(helpers.get().size(), 0);
+
+    }
+
 
 
 

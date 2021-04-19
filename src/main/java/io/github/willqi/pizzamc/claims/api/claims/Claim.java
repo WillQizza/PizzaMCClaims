@@ -6,19 +6,16 @@ import java.util.UUID;
 
 public class Claim extends ChunkCoordinates implements Cloneable {
 
-    private final String SAVE_QUERY = "REPLACE INTO claims (id, level, x, z, flags, player) VALUES (?, ?, ?, ?, ?, ?)";
-    private final String DELETE_QUERY = "DELETE FROM claims WHERE id=?";
-
     private int flags;
     private UUID owner = null;
 
-    public Claim (UUID levelUuid, int x, int z, int flags) {
-        super(levelUuid, x, z);
+    public Claim (UUID worldUuid, int x, int z, int flags) {
+        super(worldUuid, x, z);
         this.flags = flags;
     }
 
-    public Claim (UUID levelUuid, int x, int z, UUID owner, int flags) {
-        super(levelUuid, x, z);
+    public Claim (UUID worldUuid, int x, int z, UUID owner, int flags) {
+        super(worldUuid, x, z);
         this.owner = owner;
         this.flags = flags;
     }

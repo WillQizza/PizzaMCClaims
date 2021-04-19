@@ -5,9 +5,6 @@ import java.util.UUID;
 
 public class ClaimHelper implements Cloneable {
 
-    private static final String SAVE_QUERY = "REPLACE INTO claim_helpers (id, claim_id, permissions, player) VALUES (?, ?, ?, ?)";
-    private static final String DELETE_QUERY = "DELETE FROM claim_helpers WHERE id=?";
-
     private int permissions;
     private UUID uuid;
 
