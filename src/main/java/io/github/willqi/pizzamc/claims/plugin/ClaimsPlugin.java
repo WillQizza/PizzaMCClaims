@@ -5,6 +5,7 @@ import io.github.willqi.pizzamc.claims.api.daosources.DaoSource;
 import io.github.willqi.pizzamc.claims.api.daosources.SQLDaoSource;
 import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 import io.github.willqi.pizzamc.claims.api.homes.HomesManager;
+import io.github.willqi.pizzamc.claims.api.users.UsersManager;
 import io.github.willqi.pizzamc.claims.plugin.commands.ClaimCommand;
 import io.github.willqi.pizzamc.claims.plugin.commands.HomeCommand;
 import io.github.willqi.pizzamc.claims.plugin.listeners.ClaimListener;
@@ -20,6 +21,7 @@ public class ClaimsPlugin extends JavaPlugin {
     private ClaimsManager claimsManager;
     private HomesManager homesManager;
     private MenuManager menuManager;
+    private UsersManager usersManager;
 
     private DaoSource daoSource;
 
@@ -57,6 +59,7 @@ public class ClaimsPlugin extends JavaPlugin {
 
         this.claimsManager = new ClaimsManager(this.daoSource.getClaimsDao(), this.daoSource.getClaimsHelperDao());
         this.homesManager = new HomesManager(this.daoSource.getHomesDao());
+        this.usersManager = new UsersManager(this.daoSource.getUsersDao());
         this.menuManager = new MenuManager(this);
 
         this.registerEvents();
@@ -65,15 +68,19 @@ public class ClaimsPlugin extends JavaPlugin {
     }
 
     public ClaimsManager getClaimsManager() {
-        return claimsManager;
+        return this.claimsManager;
     }
 
     public HomesManager getHomesManager() {
-        return homesManager;
+        return this.homesManager;
+    }
+
+    public UsersManager getUsersManager() {
+        return this.usersManager;
     }
 
     public MenuManager getMenuManager() {
-        return menuManager;
+        return this.menuManager;
     }
 
     private void registerEvents() {

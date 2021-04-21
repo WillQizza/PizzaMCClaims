@@ -19,6 +19,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class ClaimHelperLookUpType implements MenuType {
 
@@ -98,9 +99,19 @@ public class ClaimHelperLookUpType implements MenuType {
                     params.put("uuid", targetPlayer.getUniqueId());
                     this.plugin.getMenuManager().showMenu(player, ClaimHelperFlagsType.ID, params);
                 } else {
-                    // TODO: use user manager to get uuid via name
-                    player.sendMessage("TODO: please implement this");
-                    //this.plugin.getMenuManager().showMenu(player, ClaimHelperFlagsType.ID, params);
+                    this.plugin.getUsersManager().fetchUser(targetName).whenComplete((user, exception) -> {
+                        if (exception != null) {
+                            this.plugin.getLogger().log(Level.SEVERE, "Failed to fetch user record by name of " + targetName, exception);
+                            player.sendMessage(Utility.formatResponse("Claims", "An exception has occurred!", ChatColor.RED));
+                        } else {
+                            if (user.isPresent()) {
+                                params.put("uuid", user.get().getUuid());
+                                this.plugin.getMenuManager().showMenu(player, ClaimHelperFlagsType.ID, params);
+                            } else {
+                                player.sendMessage(Utility.formatResponse("Claims", "That player does not exist or has not logged on the server yet!"));
+                            }
+                        }
+                    });
                 }
 
             }
