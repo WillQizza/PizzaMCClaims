@@ -34,19 +34,19 @@ public class ClaimHelper implements Cloneable {
      * @param permission
      * @return the helper
      */
-    public void addPermission (Permissions permission) {
+    public void addPermission (Permission permission) {
         if ((this.permissions & permission.getValue()) == 0) {
             this.permissions += permission.getValue();
         }
     }
 
-    public void removePermission (Permissions permission) {
+    public void removePermission (Permission permission) {
         if ((this.permissions & permission.getValue()) != 0) {
             this.permissions -= permission.getValue();
         }
     }
 
-    public boolean hasPermission (Permissions permission) {
+    public boolean hasPermission (Permission permission) {
         return (this.permissions & permission.getValue()) != 0;
     }
 
@@ -74,21 +74,40 @@ public class ClaimHelper implements Cloneable {
         }
     }
 
-    public enum Permissions {
+    public enum Permission {
 
-        ADMIN(generateValue(0)),
-        FLY(generateValue(1)),
-        BUILD(generateValue(2)),
-        INTERACT(generateValue(3));
+        BUILD("Build", "Allow this player to build and destroy blocks!", generateValue(0)),
+        INTERACT("Interact", "Allow this player to interact with blocks!", generateValue(1));
 
+        private final String title;
+        private final String description;
         private final int value;
 
-        Permissions(final int value) {
+        Permission(String title, String description, int value) {
+            this.title = title;
+            this.description = description;
             this.value = value;
         }
 
+        public String getTitle() {
+            return this.title;
+        }
+
+        public String getDescription() {
+            return this.description;
+        }
+
         public int getValue() {
-            return value;
+            return this.value;
+        }
+
+        public static Permission getPermisionByValue(int value) {
+            for (Permission permission : Permission.values()) {
+                if (permission.getValue() == value) {
+                    return permission;
+                }
+            }
+            return null;
         }
 
         private static int generateValue(final int index) {

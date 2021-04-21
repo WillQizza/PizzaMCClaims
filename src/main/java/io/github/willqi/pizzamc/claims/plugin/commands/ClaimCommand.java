@@ -165,6 +165,7 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
 
                 Map<String, Object> helpersParams = new HashMap<>();
                 helpersParams.put("claim", currentClaim.get());
+                helpersParams.put("page", 1);
                 this.plugin.getMenuManager().showMenu(player, ClaimHelperSelectionMenuType.ID, helpersParams);
                 break;
         }

@@ -43,30 +43,30 @@ public class HomeSelectionMenuType implements MenuType {
 
         Inventory homesSelectionInventory = Bukkit.createInventory(player, 54, "My Homes");
 
+        for (int i = 1; i < 8; i++) {
+            homesSelectionInventory.setItem(i, getEmptyGlassPane());
+        }
+
         // Do we need the previous page button?
         if (currentPage > 1) {
-            homesSelectionInventory.setItem(0, getPreviousPageBlock(currentPage));
+            homesSelectionInventory.setItem(0, getPreviousPageItemStack(currentPage));
         } else {
-            homesSelectionInventory.setItem(0, getNoPageOptionBlock());
+            homesSelectionInventory.setItem(0, getNoPageOptionItemStack());
         }
 
         // Do we need the next page button?
         int skippedHomes = (currentPage - 1) * 45;
         if (homes.size() - skippedHomes > 45) {
-            homesSelectionInventory.setItem(8, getNextPageBlock(currentPage));
+            homesSelectionInventory.setItem(8, getNextPageItemStack(currentPage));
         } else {
-            homesSelectionInventory.setItem(8, getNoPageOptionBlock());
-        }
-
-        for (int i = 1; i < 8; i++) {
-            homesSelectionInventory.setItem(i, getEmptyGlassPane());
+            homesSelectionInventory.setItem(8, getNoPageOptionItemStack());
         }
 
         // Place homes on inventory
         List<Home> shownHomes = homes.subList((currentPage - 1) * 45, Math.min(currentPage * 45, homes.size()));
         int inventoryIndex = 9;
         for (Home home : shownHomes) {
-            homesSelectionInventory.setItem(inventoryIndex, getHomeBlock(home));
+            homesSelectionInventory.setItem(inventoryIndex, getHomeItemStack(home));
             inventoryIndex++;
         }
 
@@ -74,8 +74,13 @@ public class HomeSelectionMenuType implements MenuType {
         this.openInventories.put(player.getUniqueId(), currentPage);
     }
 
+    @Override
+    public void onClose(Player player) {
+        player.closeInventory();
+    }
+
     @EventHandler
-    public void onInventoryPickUp(InventoryClickEvent event) {
+    public void onInventoryClick(InventoryClickEvent event) {
         if (event.getInventory().getHolder() instanceof Player) {
             Player player = (Player)event.getInventory().getHolder();
             if (this.openInventories.containsKey(player.getUniqueId()) && event.getClickedInventory() != player.getInventory()) {
@@ -145,7 +150,7 @@ public class HomeSelectionMenuType implements MenuType {
 
     }
 
-    private static ItemStack getPreviousPageBlock(int currentPage) {
+    private static ItemStack getPreviousPageItemStack(int currentPage) {
         ItemStack goBackItem = new Wool(DyeColor.RED).toItemStack(1);
         ItemMeta meta = goBackItem.getItemMeta();
         meta.setDisplayName(ChatColor.RESET + "Previous Page (" + (currentPage - 1) + ")");
@@ -153,7 +158,7 @@ public class HomeSelectionMenuType implements MenuType {
         return goBackItem;
     }
 
-    private static ItemStack getNextPageBlock(int currentPage) {
+    private static ItemStack getNextPageItemStack(int currentPage) {
         ItemStack goForwardItem = new Wool(DyeColor.LIME).toItemStack(1);
         ItemMeta meta = goForwardItem.getItemMeta();
         meta.setDisplayName(ChatColor.RESET + "Next Page (" + (currentPage + 1) + ")");
@@ -161,7 +166,7 @@ public class HomeSelectionMenuType implements MenuType {
         return goForwardItem;
     }
 
-    private static ItemStack getNoPageOptionBlock() {
+    private static ItemStack getNoPageOptionItemStack() {
         ItemStack noOptionItem = new Wool(DyeColor.GRAY).toItemStack(1);
         ItemMeta meta = noOptionItem.getItemMeta();
         meta.setDisplayName(" ");
@@ -169,7 +174,7 @@ public class HomeSelectionMenuType implements MenuType {
         return noOptionItem;
     }
 
-    private static ItemStack getHomeBlock(Home home) {
+    private static ItemStack getHomeItemStack(Home home) {
         ItemStack homeItem = new ItemStack(Material.BED, 1, (short)14);
         ItemMeta meta = homeItem.getItemMeta();
         meta.setDisplayName("" + ChatColor.RESET + ChatColor.LIGHT_PURPLE + home.getName());

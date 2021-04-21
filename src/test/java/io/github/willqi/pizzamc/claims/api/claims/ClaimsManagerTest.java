@@ -244,7 +244,7 @@ public class ClaimsManagerTest {
     @Test
     public void fetchAndGetClaimHelpersShouldRetrieveCacheDataWhenAvailable() throws DaoException {
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
-        ClaimHelper daoHelper = new ClaimHelper(NULL_UUID, ClaimHelper.Permissions.ADMIN.getValue());
+        ClaimHelper daoHelper = new ClaimHelper(NULL_UUID, ClaimHelper.Permission.BUILD.getValue());
 
         ClaimsHelperDao mockClaimsHelpersDao = spy(new TestClaimsHelperDao(){
 
@@ -274,7 +274,7 @@ public class ClaimsManagerTest {
     @Test
     public void fetchAndGetClaimHelpersShouldReturnClones() {
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
-        ClaimHelper helper = new ClaimHelper(NULL_UUID, ClaimHelper.Permissions.ADMIN.getValue());
+        ClaimHelper helper = new ClaimHelper(NULL_UUID, ClaimHelper.Permission.BUILD.getValue());
 
         ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimsHelperDao());
 
@@ -303,14 +303,14 @@ public class ClaimsManagerTest {
     @Test
     public void saveClaimHelpersShouldUpdateIfExistingHelperProvided() throws DaoException {
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
-        ClaimHelper helper = new ClaimHelper(NULL_UUID, ClaimHelper.Permissions.ADMIN.getValue());
+        ClaimHelper helper = new ClaimHelper(NULL_UUID, ClaimHelper.Permission.BUILD.getValue());
 
         ClaimsHelperDao mockClaimsHelperDao = spy(new TestClaimsHelperDao());
 
         ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), mockClaimsHelperDao);
         try {
             claimsManager.saveClaimHelper(coordinates, helper).get();
-            helper.addPermission(ClaimHelper.Permissions.FLY);
+            helper.addPermission(ClaimHelper.Permission.INTERACT);
             claimsManager.saveClaimHelper(coordinates, helper).get();
         } catch (InterruptedException | ExecutionException exception) {
             throw new AssertionError("saveClaimHelper threw an error somehow", exception);
@@ -321,7 +321,7 @@ public class ClaimsManagerTest {
     @Test
     public void saveClaimHelpersShouldInsertIfNoExistingHelperFound() throws DaoException {
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
-        ClaimHelper helper = new ClaimHelper(NULL_UUID, ClaimHelper.Permissions.ADMIN.getValue());
+        ClaimHelper helper = new ClaimHelper(NULL_UUID, ClaimHelper.Permission.BUILD.getValue());
 
         ClaimsHelperDao mockClaimsHelperDao = spy(new TestClaimsHelperDao());
 

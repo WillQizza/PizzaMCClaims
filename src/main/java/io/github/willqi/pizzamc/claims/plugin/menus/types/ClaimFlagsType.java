@@ -41,15 +41,20 @@ public class ClaimFlagsType implements MenuType {
     public void onOpen(Player player, Map<String, Object> params) {
         Claim claim = (Claim)params.get("claim");
 
-        Inventory flagsInventory = Bukkit.createInventory(player, 18);
-        flagsInventory.setItem(4, getInformationItem());
+        Inventory flagsInventory = Bukkit.createInventory(player, 18, "Flags");
+        flagsInventory.setItem(4, getInformationItemStack());
 
-        flagsInventory.setItem(12, getFlagItem(Claim.Flag.ALWAYS_DAY, new ItemStack(Material.DAYLIGHT_DETECTOR, 1), claim.hasFlag(Claim.Flag.ALWAYS_DAY)));
-        flagsInventory.setItem(13, getFlagItem(Claim.Flag.DENY_PVP, new ItemStack(Material.DIAMOND_SWORD, 1), claim.hasFlag(Claim.Flag.DENY_PVP)));
-        flagsInventory.setItem(14, getFlagItem(Claim.Flag.DISABLE_MOB_SPAWNING, new ItemStack(Material.BONE, 1), claim.hasFlag(Claim.Flag.DISABLE_MOB_SPAWNING)));
+        flagsInventory.setItem(12, getFlagItemStack(Claim.Flag.ALWAYS_DAY, new ItemStack(Material.DAYLIGHT_DETECTOR, 1), claim.hasFlag(Claim.Flag.ALWAYS_DAY)));
+        flagsInventory.setItem(13, getFlagItemStack(Claim.Flag.DENY_PVP, new ItemStack(Material.DIAMOND_SWORD, 1), claim.hasFlag(Claim.Flag.DENY_PVP)));
+        flagsInventory.setItem(14, getFlagItemStack(Claim.Flag.DISABLE_MOB_SPAWNING, new ItemStack(Material.BONE, 1), claim.hasFlag(Claim.Flag.DISABLE_MOB_SPAWNING)));
 
         player.openInventory(flagsInventory);
         this.openInventories.put(player.getUniqueId(), claim);
+    }
+
+    @Override
+    public void onClose(Player player) {
+        player.closeInventory();
     }
 
     @EventHandler
@@ -101,7 +106,7 @@ public class ClaimFlagsType implements MenuType {
     }
 
 
-    private static ItemStack getFlagItem(Claim.Flag flag, ItemStack item, boolean enabled) {
+    private static ItemStack getFlagItemStack(Claim.Flag flag, ItemStack item, boolean enabled) {
         ItemStack flagItem = new ItemStack(item);
         ItemMeta meta = flagItem.getItemMeta();
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
@@ -122,7 +127,7 @@ public class ClaimFlagsType implements MenuType {
         return flagItem;
     }
 
-    private static ItemStack getInformationItem() {
+    private static ItemStack getInformationItemStack() {
         ItemStack item = new ItemStack(Material.BOOK, 1);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("" + ChatColor.RESET + ChatColor.YELLOW + ChatColor.BOLD + "Flags");

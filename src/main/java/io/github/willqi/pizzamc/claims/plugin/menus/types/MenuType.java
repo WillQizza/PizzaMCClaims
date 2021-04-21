@@ -9,8 +9,6 @@ public interface MenuType extends Listener {
 
     void onOpen(Player player, Map<String, Object> params);
 
-    default void onClose(Player player) {
-
-    }
+    void onClose(Player player);
 
 }

@@ -99,6 +99,8 @@ public class ClaimsPlugin extends JavaPlugin {
 
         this.menuManager.register(ClaimFlagsType.ID, new ClaimFlagsType(this));
         this.menuManager.register(ClaimHelperSelectionMenuType.ID, new ClaimHelperSelectionMenuType(this));
+        this.menuManager.register(ClaimHelperFlagsType.ID, new ClaimHelperFlagsType(this));
+        this.menuManager.register(ClaimHelperLookUpType.ID, new ClaimHelperLookUpType(this));
     }
 
 }

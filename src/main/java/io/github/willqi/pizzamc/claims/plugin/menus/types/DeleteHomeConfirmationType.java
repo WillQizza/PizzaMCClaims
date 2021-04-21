@@ -37,11 +37,16 @@ public class DeleteHomeConfirmationType implements MenuType {
     public void onOpen(Player player, Map<String, Object> params) {
         Home home = (Home)params.get("home");
         Inventory inventory = Bukkit.createInventory(player, 9, "Delete " + home.getName() + "?");
-        inventory.setItem(0, getNoItem());
-        inventory.setItem(4, getHomeItem(home));
-        inventory.setItem(8, getYesItem(home));
+        inventory.setItem(0, getNoItemStack());
+        inventory.setItem(4, getHomeItemStack(home));
+        inventory.setItem(8, getYesItemStack(home));
         player.openInventory(inventory);
         this.openInventories.put(player.getUniqueId(), home);
+    }
+
+    @Override
+    public void onClose(Player player) {
+        player.closeInventory();
     }
 
     @EventHandler
@@ -92,7 +97,7 @@ public class DeleteHomeConfirmationType implements MenuType {
     }
 
 
-    private static ItemStack getHomeItem(Home home) {
+    private static ItemStack getHomeItemStack(Home home) {
         ItemStack item = new ItemStack(Material.PAPER);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("" + ChatColor.RESET + ChatColor.RED + "Are you sure you want to delete " + ChatColor.BOLD + home.getName() + ChatColor.RESET + ChatColor.RED + "?");
@@ -100,7 +105,7 @@ public class DeleteHomeConfirmationType implements MenuType {
         return item;
     }
 
-    private static ItemStack getYesItem(Home home) {
+    private static ItemStack getYesItemStack(Home home) {
         ItemStack item = new Wool(DyeColor.LIME).toItemStack(1);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("" + ChatColor.RESET + ChatColor.RED + "Are you sure you want to delete " + ChatColor.BOLD + home.getName() + ChatColor.RESET + ChatColor.RED + "?");
@@ -108,7 +113,7 @@ public class DeleteHomeConfirmationType implements MenuType {
         return item;
     }
 
-    private static ItemStack getNoItem() {
+    private static ItemStack getNoItemStack() {
         ItemStack item = new Wool(DyeColor.RED).toItemStack(1);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(ChatColor.RESET + "Cancel");

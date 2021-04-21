@@ -123,6 +123,12 @@ public class ClaimsManager {
                 .map(helpers -> helpers.stream().map(ClaimHelper::clone).collect(Collectors.toSet()));
     }
 
+    /**
+     * Get a claim helper from the cache
+     * @param coordinates
+     * @param helperUuid
+     * @return Will return null if the claim helper does not exist or if no helpers have been fetched yet.
+     */
     public Optional<ClaimHelper> getClaimHelper(ChunkCoordinates coordinates, UUID helperUuid) {
         Set<ClaimHelper> existingHelpers = this.helpersCache.getOrDefault(coordinates, null);
         if (existingHelpers != null) {

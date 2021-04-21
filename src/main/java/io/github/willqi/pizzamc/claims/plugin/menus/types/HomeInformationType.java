@@ -41,13 +41,13 @@ public class HomeInformationType implements MenuType {
         for (int i = 0; i < 9; i++) {
             switch (i) {
                 case 0:
-                    homeInformationInventory.setItem(i, getUpdateHomeItem());
+                    homeInformationInventory.setItem(i, getUpdateHomeItemStack());
                     break;
                 case 4:
-                    homeInformationInventory.setItem(i, getTeleportItem(home));
+                    homeInformationInventory.setItem(i, getTeleportItemStack(home));
                     break;
                 case 8:
-                    homeInformationInventory.setItem(i, getDeleteItem());
+                    homeInformationInventory.setItem(i, getDeleteItemStack());
                     break;
                 default:
                     homeInformationInventory.setItem(i, getEmptyGlassPane());
@@ -57,6 +57,11 @@ public class HomeInformationType implements MenuType {
 
         player.openInventory(homeInformationInventory);
         this.openInventories.put(player.getUniqueId(), home);
+    }
+
+    @Override
+    public void onClose(Player player) {
+        player.closeInventory();
     }
 
     @EventHandler
@@ -129,7 +134,7 @@ public class HomeInformationType implements MenuType {
 
 
 
-    private static ItemStack getUpdateHomeItem() {
+    private static ItemStack getUpdateHomeItemStack() {
         ItemStack item = new ItemStack(Material.COMPASS);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("" + ChatColor.RESET + ChatColor.AQUA + "Update Position");
@@ -138,7 +143,7 @@ public class HomeInformationType implements MenuType {
         return item;
     }
 
-    private static ItemStack getDeleteItem() {
+    private static ItemStack getDeleteItemStack() {
         ItemStack item = new ItemStack(Material.TNT, 1);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("" + ChatColor.RESET + ChatColor.RED + "Delete Home");
@@ -146,7 +151,7 @@ public class HomeInformationType implements MenuType {
         return item;
     }
 
-    private static ItemStack getTeleportItem(Home home) {
+    private static ItemStack getTeleportItemStack(Home home) {
         ItemStack item = new ItemStack(Material.BED, 1, (short)14);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("" + ChatColor.RESET + ChatColor.LIGHT_PURPLE + "Teleport to " + home.getName());
