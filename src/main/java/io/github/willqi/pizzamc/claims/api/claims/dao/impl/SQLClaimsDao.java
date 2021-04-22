@@ -22,7 +22,7 @@ public class SQLClaimsDao implements ClaimsDao {
             ")";
 
     private static final String STMT_GET_CLAIM = "SELECT ownerUuid, flags FROM claims WHERE worldUuid=? AND x=? AND z=?";
-    private static final String STMT_GET_CLAIM_COUNT = "SELECT COUNT(1) AS total FROM claims WHERE uuid=?";
+    private static final String STMT_GET_CLAIM_COUNT = "SELECT COUNT(1) AS total FROM claims WHERE ownerUuid=?";
     private static final String STMT_INSERT_CLAIM = "INSERT INTO claims (worldUuid, x, z, ownerUuid, flags) VALUES (?, ?, ?, ?, ?)";
     private static final String STMT_UPDATE_CLAIM = "UPDATE claims SET ownerUuid=?, flags=? WHERE worldUuid=? AND x=? AND z=?";
     private static final String STMT_DELETE_CLAIM = "DELETE FROM claims WHERE worldUuid=? AND x=? AND z=?";

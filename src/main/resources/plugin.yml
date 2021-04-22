@@ -17,10 +17,13 @@ commands:
 
 permissions:
   pizzamcclaims.commands.home:
-    default: op
+    default: true
     description: Gives access to /home
-  pizzamcclaims.commands.claim.claim:
+  pizzamcclaims.commands.home.admin:
     default: op
+    description: Bypass the home limit
+  pizzamcclaims.commands.claim:
+    default: true
     description: Gives access to /claim add and /claim remove
   pizzamcclaims.commands.claim.flags:
     default: op
@@ -30,4 +33,4 @@ permissions:
     description: Gives access to all /claim helpers related commands
   pizzamcclaims.commands.claim.admin:
     default: op
-    description: Bypass any checks for claim commands
+    description: Bypass any checks for claim commands (and the claim limit)

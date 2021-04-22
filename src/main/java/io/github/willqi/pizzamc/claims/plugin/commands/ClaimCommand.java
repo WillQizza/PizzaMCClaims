@@ -48,7 +48,7 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
         if (
                 !playerIsClaimAdmin &&
                 !player.hasPermission(Permissions.CAN_MANAGE_HELPERS) &&
-                !player.hasPermission(Permissions.CAN_CLAIM_LAND) &&
+                !player.hasPermission(Permissions.CAN_CLAIM_LAND_AND_USE_COMMAND) &&
                 !player.hasPermission(Permissions.CAN_CHANGE_CLAIM_FLAGS)
         ) {
             commandSender.sendMessage(Utility.NO_PERMISSIONS_MESSAGE);
@@ -70,7 +70,7 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
 
         switch (args[0]) {
             case "add":
-                if (!player.hasPermission(Permissions.CAN_CLAIM_LAND) && !playerIsClaimAdmin) {
+                if (!player.hasPermission(Permissions.CAN_CLAIM_LAND_AND_USE_COMMAND) && !playerIsClaimAdmin) {
                     player.sendMessage(Utility.NO_PERMISSIONS_MESSAGE);
                     return true;
                 }
@@ -84,7 +84,20 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
                     }
                     return true;
                 }
-                // TODO: claim limit check
+
+                // Check if the player is allowed to claim anymore land
+                int claimLimit = this.plugin.getConfig().getInt("max_claims_per_player");
+                if (!playerIsClaimAdmin && claimLimit >= 0) {
+                    Optional<Integer> totalClaims = this.plugin.getClaimsManager().getClaimCount(player.getUniqueId());
+                    if (!totalClaims.isPresent()) {
+                        player.sendMessage(Utility.formatResponse("Claims", "Please wait a moment..."));
+                        return true;
+                    }
+                    if (totalClaims.get() >= claimLimit) {
+                        player.sendMessage(Utility.formatResponse("Claims", "Sorry, you can not claim any more land!", ChatColor.RED));
+                        return true;
+                    }
+                }
 
                 ChunkClaimEvent chunkClaimEvent = new ChunkClaimEvent(player, currentClaim.get());
                 this.plugin.getServer().getPluginManager().callEvent(chunkClaimEvent);
@@ -105,7 +118,7 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
 
 
             case "remove":
-                if (!player.hasPermission(Permissions.CAN_CLAIM_LAND) && !playerIsClaimAdmin) {
+                if (!player.hasPermission(Permissions.CAN_CLAIM_LAND_AND_USE_COMMAND) && !playerIsClaimAdmin) {
                     player.sendMessage(Utility.NO_PERMISSIONS_MESSAGE);
                     return true;
                 }

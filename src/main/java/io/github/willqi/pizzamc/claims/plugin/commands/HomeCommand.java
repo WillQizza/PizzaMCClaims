@@ -98,12 +98,15 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(Utility.formatResponse("Homes", String.format("Incorrect usage: /%s %s <name>", label, args[0].toLowerCase()), ChatColor.RED));
                     return true;
                 }
+
+                // Check if they are allowed to make anymore homes
+                int homesLimit = this.plugin.getConfig().getInt("max_homes_per_player");
+                if (!player.hasPermission(Permissions.HAS_HOME_ADMIN) && homesLimit >= 0 && homes.get().keySet().size() >= homesLimit) {
+                    player.sendMessage(Utility.formatResponse("Homes", "Sorry, you cannot create anymore homes.", ChatColor.RED));
+                    return true;
+                }
+
                 String homeName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-                // TODO: implement userManager to handle home/claim limits
-//                if (!homesManager.canCreateHome(player)) {
-//                    player.sendMessage(Utility.formatResponse("Homes", "You have reached the max homes limit!", ChatColor.RED));
-//                    return true;
-//                }
 
                 // Does the home already exist?
                 if (homesManager.getHome(player.getUniqueId(), homeName).isPresent()) {
