@@ -6,14 +6,13 @@ import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.Field;
-import java.util.function.Consumer;
 
 public class Utility {
 
     public static final ChatColor HEADER_COLOR = ChatColor.BLUE;
     public static final ChatColor TEXT_COLOR = ChatColor.GRAY;
 
-    public static final String NO_PERMISSIONS_MESSAGE = formatResponse("Permissions", "You do not have permissions to use this command.", ChatColor.RED);
+    public static final String NO_PERMISSIONS_MESSAGE = formatResponse("Permissions", "You do not have permission to use this command.", ChatColor.RED);
 
     public static String formatResponse (String header, String text) {
         return String.format("%s%s> %s%s", HEADER_COLOR, header, TEXT_COLOR, text);

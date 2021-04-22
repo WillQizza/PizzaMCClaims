@@ -1,17 +1,24 @@
 package io.github.willqi.pizzamc.claims.plugin.listeners;
 
 import io.github.willqi.pizzamc.claims.api.claims.ChunkCoordinates;
-import io.github.willqi.pizzamc.claims.api.claims.ClaimsManager;
+import io.github.willqi.pizzamc.claims.api.claims.Claim;
+import io.github.willqi.pizzamc.claims.api.claims.ClaimHelper;
 import io.github.willqi.pizzamc.claims.plugin.ClaimsPlugin;
+import io.github.willqi.pizzamc.claims.plugin.Permissions;
+import io.github.willqi.pizzamc.claims.plugin.Utility;
+import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.event.world.ChunkUnloadEvent;
 
+import java.util.Optional;
 import java.util.logging.Level;
 
 public class ClaimListener implements Listener {
@@ -38,17 +45,168 @@ public class ClaimListener implements Listener {
     }
 
     @EventHandler
+    public void onPlayerTeleport(PlayerTeleportEvent event) {
+        this.handlePlayerMovementEvent(event);
+    }
+
+    @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
-        Chunk currentChunk = event.getTo().getChunk();
-        Chunk previousChunk = event.getFrom().getChunk();
-        if ((currentChunk.getX() != previousChunk.getX()) || (currentChunk.getZ() != previousChunk.getZ())) {
-            this.requestChunksAround(event.getTo());
-        }
+        this.handlePlayerMovementEvent(event);
     }
 
     @EventHandler
     public void onChunkUnload(ChunkUnloadEvent event) {
         this.plugin.getClaimsManager().removeClaimFromCache(new ChunkCoordinates(event.getChunk().getWorld().getUID(), event.getChunk().getX(), event.getChunk().getZ()));
+    }
+
+
+
+    @EventHandler
+    public void onClaimBlockPlace(BlockPlaceEvent event) {
+        switch (this.getPlayerBuildStateInChunk(event.getPlayer(), event.getBlock().getChunk())) {
+            case DENIED:
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(Utility.formatResponse("Claims", "You do not have permission to build in this chunk!", ChatColor.RED));
+                break;
+            case LOADING:
+                event.getPlayer().sendMessage(Utility.formatResponse("Claims", "Please wait a moment...", ChatColor.RED));
+                event.setCancelled(true);
+                break;
+        }
+    }
+
+    @EventHandler
+    public void onClaimBlockBreakEvent(BlockBreakEvent event) {
+        switch (this.getPlayerBuildStateInChunk(event.getPlayer(), event.getBlock().getChunk())) {
+            case DENIED:
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(Utility.formatResponse("Claims", "You do not have permission to break blocks in this chunk!", ChatColor.RED));
+                break;
+            case LOADING:
+                event.getPlayer().sendMessage(Utility.formatResponse("Claims", "Please wait a moment...", ChatColor.RED));
+                event.setCancelled(true);
+                break;
+        }
+    }
+
+    @EventHandler
+    public void onClaimInteraction(PlayerInteractEvent event) {
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            switch (event.getClickedBlock().getType()) {
+                case ANVIL:
+                case BED:
+                case BREWING_STAND:
+                case STONE_BUTTON:
+                case WOOD_BUTTON:
+                case CAULDRON:
+                case CHEST:
+                case COMMAND:
+                case COMMAND_CHAIN:
+                case COMMAND_REPEATING:
+                case WORKBENCH:
+                case DARK_OAK_DOOR:
+                case ACACIA_DOOR:
+                case BIRCH_DOOR:
+                case IRON_DOOR:
+                case JUNGLE_DOOR:
+                case SPRUCE_DOOR:
+                case TRAP_DOOR:
+                case WOOD_DOOR:
+                case WOODEN_DOOR:
+                case IRON_TRAPDOOR:
+                case ENCHANTMENT_TABLE:
+                case ENDER_PORTAL_FRAME:
+                case FENCE_GATE:
+                case ACACIA_FENCE_GATE:
+                case BIRCH_FENCE_GATE:
+                case DARK_OAK_FENCE_GATE:
+                case JUNGLE_FENCE_GATE:
+                case SPRUCE_FENCE_GATE:
+                case FURNACE:
+                case BURNING_FURNACE:
+                case JUKEBOX:
+                case LEVER:
+                case NOTE_BLOCK:
+                case REDSTONE_ORE:
+                case TRAPPED_CHEST:
+                case ENDER_CHEST:
+                case REDSTONE_COMPARATOR:
+                case REDSTONE_COMPARATOR_OFF:
+                case REDSTONE_COMPARATOR_ON:
+                case DIODE:
+                case DIODE_BLOCK_OFF:
+                case DIODE_BLOCK_ON:
+                    switch (this.getPlayerInteractStateInChunk(event.getPlayer(), event.getClickedBlock().getChunk())) {
+                        case DENIED:
+                            event.setCancelled(true);
+                            event.getPlayer().sendMessage(Utility.formatResponse("Claims", "You do not have permission to interact with blocks this chunk!", ChatColor.RED));
+                            break;
+                        case LOADING:
+                            event.getPlayer().sendMessage(Utility.formatResponse("Claims", "Please wait a moment...", ChatColor.RED));
+                            event.setCancelled(true);
+                            break;
+                    }
+
+                    break;
+            }
+        }
+    }
+
+
+    private PermissionState getPlayerInteractStateInChunk(Player player, Chunk chunk) {
+        return this.getPlayerStateInChunkUsingHelperPermission(player, chunk, ClaimHelper.Permission.INTERACT);
+    }
+
+    private PermissionState getPlayerBuildStateInChunk(Player player, Chunk chunk) {
+        return this.getPlayerStateInChunkUsingHelperPermission(player, chunk, ClaimHelper.Permission.BUILD);
+    }
+
+    /**
+     * Sees if the player can perform an operation on the chunk
+     * by checking if the chunk has no owner or if the chunk owner is the player.
+     *
+     * If this is not the case, it will get the cached claim helpers
+     * and check to see if they have the permission provided.
+     */
+    private PermissionState getPlayerStateInChunkUsingHelperPermission(Player player, Chunk chunk, ClaimHelper.Permission helperPermission) {
+        if (player.hasPermission(Permissions.HAS_CLAIM_ADMIN)) {
+            return PermissionState.ALLOWED;
+        }
+        ChunkCoordinates coordinates = new ChunkCoordinates(
+                chunk.getWorld().getUID(),
+                chunk.getX(),
+                chunk.getZ()
+        );
+        Optional<Claim> currentClaim = this.plugin.getClaimsManager().getClaim(coordinates);
+
+        if (!currentClaim.isPresent()) {
+            return PermissionState.LOADING;
+        }
+
+        // does this claim have a owner? Is it us? If not, are we a helper with permission?
+        if (currentClaim.get().getOwner().isPresent() && !currentClaim.get().getOwner().get().equals(player.getUniqueId())) {
+            // We do not own this claim, so are we a claim helper with permission to do this?
+            Optional<ClaimHelper> helper = this.plugin.getClaimsManager().getClaimHelper(coordinates, player.getUniqueId());
+            if (!helper.isPresent() || !helper.get().hasPermission(helperPermission)) {
+                return PermissionState.DENIED;
+            }
+        }
+
+        return PermissionState.ALLOWED;
+    }
+
+    private enum PermissionState {
+        ALLOWED,
+        DENIED,
+        LOADING
+    }
+
+    private void handlePlayerMovementEvent(PlayerMoveEvent event) {
+        Chunk currentChunk = event.getTo().getChunk();
+        Chunk previousChunk = event.getFrom().getChunk();
+        if ((currentChunk.getX() != previousChunk.getX()) || (currentChunk.getZ() != previousChunk.getZ())) {
+            this.requestChunksAround(event.getTo());
+        }
     }
 
     private void requestChunksAround(Location location) {
