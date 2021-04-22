@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 
 import java.util.logging.Level;
@@ -24,6 +25,16 @@ public class ClaimListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         this.requestChunksAround(event.getPlayer().getLocation());
+        this.plugin.getClaimsManager().fetchClaimCount(event.getPlayer().getUniqueId()).whenComplete((count, exception) -> {
+            if (exception != null) {
+                this.plugin.getLogger().log(Level.SEVERE, "Failed to fetch claim count of uuid " + event.getPlayer().getUniqueId(), exception);
+            }
+        });
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        this.plugin.getClaimsManager().removeClaimCountFromCache(event.getPlayer().getUniqueId());
     }
 
     @EventHandler

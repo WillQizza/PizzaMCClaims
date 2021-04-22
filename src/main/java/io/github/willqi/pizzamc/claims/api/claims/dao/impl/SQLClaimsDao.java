@@ -22,6 +22,7 @@ public class SQLClaimsDao implements ClaimsDao {
             ")";
 
     private static final String STMT_GET_CLAIM = "SELECT ownerUuid, flags FROM claims WHERE worldUuid=? AND x=? AND z=?";
+    private static final String STMT_GET_CLAIM_COUNT = "SELECT COUNT(1) AS total FROM claims WHERE uuid=?";
     private static final String STMT_INSERT_CLAIM = "INSERT INTO claims (worldUuid, x, z, ownerUuid, flags) VALUES (?, ?, ?, ?, ?)";
     private static final String STMT_UPDATE_CLAIM = "UPDATE claims SET ownerUuid=?, flags=? WHERE worldUuid=? AND x=? AND z=?";
     private static final String STMT_DELETE_CLAIM = "DELETE FROM claims WHERE worldUuid=? AND x=? AND z=?";
@@ -89,6 +90,36 @@ public class SQLClaimsDao implements ClaimsDao {
             }
         }
         return Optional.ofNullable(claim);
+    }
+
+    @Override
+    public int getClaimCountOfUuid(UUID uuid) throws DaoException {
+        Connection connection = null;
+        PreparedStatement stmt = null;
+        ResultSet results = null;
+        try {
+            connection = this.source.getConnection();
+            stmt = connection.prepareStatement(STMT_GET_CLAIM_COUNT);
+            stmt.setString(1, uuid.toString());
+            results = stmt.executeQuery();
+
+            if (results.next()) {
+                return results.getInt("total");
+            }
+        } catch (SQLException exception) {
+            throw new DaoException(exception);
+        } finally {
+            if (results != null) {
+                try { results.close(); } catch (SQLException ignored) {}
+            }
+            if (stmt != null) {
+                try { stmt.close(); } catch (SQLException ignored) {}
+            }
+            if (connection != null) {
+                try { connection.close(); } catch (SQLException ignored) {}
+            }
+        }
+        return 0;
     }
 
     @Override

@@ -18,10 +18,12 @@ public class ClaimsManager {
 
     private final Map<ChunkCoordinates, Claim> claimsCache;
     private final Map<ChunkCoordinates, Set<ClaimHelper>> helpersCache;
+    private final Map<UUID, Integer> claimCountCache;
 
-    // Used to ensure that only 1 coordinate is being fetched at a time
+    // Used to ensure that only 1 future is active at a time for each query.
     private final Map<ChunkCoordinates, CompletableFuture<Claim>> queueClaimFutures;
     private final Map<ChunkCoordinates, CompletableFuture<Set<ClaimHelper>>> queueHelperFutures;
+    private final Map<UUID, CompletableFuture<Integer>> claimCountFutures;
 
     private final ClaimsDao claimsDao;
     private final ClaimsHelperDao claimsHelperDao;
@@ -32,9 +34,11 @@ public class ClaimsManager {
 
         this.claimsCache = new ConcurrentHashMap<>();
         this.helpersCache = new ConcurrentHashMap<>();
+        this.claimCountCache = new ConcurrentHashMap<>();
 
         this.queueClaimFutures = new ConcurrentHashMap<>();
         this.queueHelperFutures = new ConcurrentHashMap<>();
+        this.claimCountFutures = new ConcurrentHashMap<>();
     }
 
 
@@ -83,10 +87,42 @@ public class ClaimsManager {
         }
     }
 
-    public void removeClaimFromCache(ChunkCoordinates coordinates) {
-        this.claimsCache.remove(coordinates);
-        this.removeClaimHelpersFromCache(coordinates);
+    public CompletableFuture<Void> saveClaim(Claim claim) {
+        return this.fetchClaim(claim.getCoordinates()).thenAcceptAsync(savedClaim -> {
+            try {
+                if (savedClaim.getOwner().isPresent() || savedClaim.getFlags() != 0 ) {
+                    this.claimsDao.update(claim);
+                    this.claimsCache.put(claim.getCoordinates(), claim.clone());
+                } else if (claim.getOwner().isPresent() || claim.getFlags() != 0) {
+                    this.claimsDao.insert(claim);
+                    this.claimsCache.put(claim.getCoordinates(), claim.clone());
+                }
+            } catch (DaoException exception) {
+                throw new CompletionException(exception);
+            }
+
+            this.updateClaimCountCache(savedClaim, claim);
+        });
     }
+
+    public CompletableFuture<Void> deleteClaim(Claim claim) {
+        return this.fetchClaimHelpers(claim.getCoordinates())
+                .thenAcceptAsync(helpers -> helpers.forEach(helper -> this.deleteClaimHelper(claim.getCoordinates(), helper)))
+                .thenRunAsync(() -> this.fetchClaim(claim.getCoordinates()).thenAcceptAsync(cachedClaim -> {
+                    try {
+                        this.claimsDao.delete(claim);
+                    } catch (DaoException exception) {
+                        throw new CompletionException(exception);
+                    }
+                    Claim newClaim = new Claim(claim.getCoordinates(), null, 0);
+                    this.claimsCache.put(claim.getCoordinates(), newClaim);
+
+                    this.updateClaimCountCache(cachedClaim, newClaim);
+                }));
+    }
+
+
+
 
 
 
@@ -118,6 +154,11 @@ public class ClaimsManager {
         }
     }
 
+    public void removeClaimFromCache(ChunkCoordinates coordinates) {
+        this.claimsCache.remove(coordinates);
+        this.removeClaimHelpersFromCache(coordinates);
+    }
+
     public Optional<Set<ClaimHelper>> getClaimHelpers(ChunkCoordinates coordinates) {
         return Optional.ofNullable(this.helpersCache.getOrDefault(coordinates, null))
                 .map(helpers -> helpers.stream().map(ClaimHelper::clone).collect(Collectors.toSet()));
@@ -139,44 +180,6 @@ public class ClaimsManager {
         } else {
             return Optional.empty();
         }
-    }
-
-    public void removeClaimHelpersFromCache(ChunkCoordinates coordinates) {
-        this.helpersCache.remove(coordinates);
-    }
-
-
-
-
-
-    public CompletableFuture<Void> saveClaim(Claim claim) {
-        return this.fetchClaim(claim.getCoordinates()).thenAcceptAsync(savedClaim -> {
-            try {
-                if (savedClaim.getOwner().isPresent() || savedClaim.getFlags() != 0 ) {
-                    this.claimsDao.update(claim);
-                    this.claimsCache.put(claim.getCoordinates(), claim.clone());
-                } else if (claim.getOwner().isPresent() || claim.getFlags() != 0) {
-                    this.claimsDao.insert(claim);
-                    this.claimsCache.put(claim.getCoordinates(), claim.clone());
-
-                }
-            } catch (DaoException exception) {
-                throw new CompletionException(exception);
-            }
-        });
-    }
-
-    public CompletableFuture<Void> deleteClaim(Claim claim) {
-        return this.fetchClaimHelpers(claim.getCoordinates())
-                .thenAcceptAsync(helpers -> helpers.forEach(helper -> this.deleteClaimHelper(claim.getCoordinates(), helper)))
-                .thenRunAsync(() -> {
-                    try {
-                        this.claimsDao.delete(claim);
-                    } catch (DaoException exception) {
-                        throw new CompletionException(exception);
-                    }
-                    this.claimsCache.put(claim.getCoordinates(), new Claim(claim.getCoordinates(), null, 0));
-                });
     }
 
     public CompletableFuture<Void> saveClaimHelper(ChunkCoordinates coordinates, ClaimHelper helper) {
@@ -217,14 +220,78 @@ public class ClaimsManager {
         });
     }
 
+    public void removeClaimHelpersFromCache(ChunkCoordinates coordinates) {
+        this.helpersCache.remove(coordinates);
+    }
+
+
+    public CompletableFuture<Integer> fetchClaimCount(UUID uuid) {
+        Integer count = this.claimCountCache.getOrDefault(uuid, null);
+        if (count != null) {
+            return CompletableFuture.completedFuture(count);
+        } else {
+            CompletableFuture<Integer> countFuture = this.claimCountFutures.getOrDefault(uuid, null);
+            if (countFuture != null) {
+                return countFuture;
+            } else {
+                CompletableFuture<Integer> activeCountFuture = CompletableFuture.supplyAsync(() -> {
+                    try {
+                        int claims = this.claimsDao.getClaimCountOfUuid(uuid);
+                        this.claimCountCache.put(uuid, claims);
+                        this.claimCountFutures.remove(uuid);
+                        return claims;
+                    } catch (DaoException exception) {
+                        throw new CompletionException(exception);
+                    }
+                });
+                this.claimCountFutures.put(uuid, activeCountFuture);
+                return activeCountFuture;
+            }
+        }
+    }
+
+    public Optional<Integer> getClaimCount(UUID uuid) {
+        return Optional.ofNullable(this.claimCountCache.getOrDefault(uuid, null));
+    }
+
+    public void removeClaimCountFromCache(UUID uuid) {
+        this.claimCountCache.remove(uuid);
+    }
+
+    private void updateClaimCountCache(Claim oldClaim, Claim newClaim) {
+        if (oldClaim.getOwner().isPresent() && !newClaim.getOwner().isPresent()) {
+            // Removing owner from claim
+            this.decrementClaimCountIfAvailable(oldClaim.getOwner().get());
+        } else if (!oldClaim.getOwner().isPresent() && newClaim.getOwner().isPresent()) {
+            // Setting owner to empty claim
+            this.incrementClaimCountIfAvailable(newClaim.getOwner().get());
+        } else if ( (!oldClaim.getOwner().equals(newClaim.getOwner())) && (oldClaim.getOwner().isPresent() && newClaim.getOwner().isPresent()) ) {
+            // Updating owner
+            this.decrementClaimCountIfAvailable(oldClaim.getOwner().get());
+            this.incrementClaimCountIfAvailable(newClaim.getOwner().get());
+        }
+    }
+
+    private void incrementClaimCountIfAvailable(UUID uuid) {
+        this.claimCountCache.computeIfPresent(uuid, (key, currentClaimCunt) -> currentClaimCunt + 1);
+    }
+
+    private void decrementClaimCountIfAvailable(UUID uuid) {
+        this.claimCountCache.computeIfPresent(uuid, (key, currentClaimCunt) -> currentClaimCunt - 1);
+    }
+
 
     /**
      * Called internally when plugin is shutdown
      */
     public void cleanUp () {
         this.claimsCache.clear();
+        this.helpersCache.clear();
+        this.claimCountCache.clear();
+
         this.queueHelperFutures.clear();
         this.queueClaimFutures.clear();
+        this.claimCountFutures.clear();
     }
 
 }

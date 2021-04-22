@@ -220,6 +220,107 @@ public class ClaimsManagerTest {
 
     }
 
+    @Test
+    public void fetchAndGetClaimCountShouldReturnClaimCountOfUuid() throws DaoException {
+        TestClaimsDao mockClaimsDao = spy(new TestClaimsDao(){
+            @Override
+            public int getClaimCountOfUuid(UUID uuid) {
+                return 1;
+            }
+        });
+        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimsHelperDao());
+        try {
+            int total = claimsManager.fetchClaimCount(NULL_UUID).get();
+            assertEquals(total, 1);
+        } catch (InterruptedException | ExecutionException exception) {
+            throw new AssertionError("fetchClaimCount threw an exception somehow.", exception);
+        }
+        verify(mockClaimsDao, times(1)).getClaimCountOfUuid(NULL_UUID);
+
+        Optional<Integer> result = claimsManager.getClaimCount(NULL_UUID);
+        if (result.isPresent()) {
+            assertEquals(result.get(), 1);
+        } else {
+            throw new AssertionError("Claim count was not cached somehow.");
+        }
+    }
+
+    @Test
+    public void addingClaimOwnerShouldIncrementClaimCountOfUuid() {
+        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimsHelperDao());
+        try {
+            claimsManager.fetchClaimCount(NULL_UUID).get();
+
+            // Add a new claim that we own
+            Claim ourClaim = new Claim(new ChunkCoordinates(NULL_UUID, 0, 0), NULL_UUID, 0);
+            claimsManager.saveClaim(ourClaim).get();
+
+            // Steal someone else's claim
+            Claim tempNotOurClaim = new Claim(new ChunkCoordinates(NULL_UUID, 1, 1), UUID.fromString("10000000-0000-0000-0000-000000000000"), 0);
+            claimsManager.saveClaim(tempNotOurClaim).get();
+            tempNotOurClaim.setOwner(NULL_UUID);
+            claimsManager.saveClaim(tempNotOurClaim).get();
+
+        } catch (InterruptedException | ExecutionException exception) {
+            throw new AssertionError("saveClaim threw an exception somehow.", exception);
+        }
+
+        Optional<Integer> result = claimsManager.getClaimCount(NULL_UUID);
+        if (result.isPresent()) {
+            assertEquals(result.get(), 2);
+        } else {
+            throw new AssertionError("Claim count was not cached somehow.");
+        }
+    }
+
+    @Test
+    public void removingClaimOwnerShouldDecrementClaimCountOfUuid() {
+        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimsHelperDao());
+        try {
+            claimsManager.fetchClaimCount(NULL_UUID).get();
+
+            // Remove a claim we own.
+            Claim ourClaim = new Claim(new ChunkCoordinates(NULL_UUID, 0, 0), NULL_UUID, 0);
+            claimsManager.saveClaim(ourClaim).get();
+            ourClaim.setOwner(null);
+            claimsManager.saveClaim(ourClaim).get();
+
+        } catch (InterruptedException | ExecutionException exception) {
+            throw new AssertionError("saveClaim threw an exception somehow.", exception);
+        }
+
+        Optional<Integer> result = claimsManager.getClaimCount(NULL_UUID);
+        if (result.isPresent()) {
+            assertEquals(result.get(), 0);
+        } else {
+            throw new AssertionError("Claim count was not cached somehow.");
+        }
+    }
+
+    @Test
+    public void updatingClaimFlagsShouldNotChangeClaimCountOfUuid() {
+        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimsHelperDao());
+        try {
+            claimsManager.fetchClaimCount(NULL_UUID).get();
+
+            // Remove a claim we own.
+            Claim ourClaim = new Claim(new ChunkCoordinates(NULL_UUID, 0, 0), NULL_UUID, 0);
+            claimsManager.saveClaim(ourClaim).get();
+            ourClaim.setFlags(5);
+            claimsManager.saveClaim(ourClaim).get();
+
+        } catch (InterruptedException | ExecutionException exception) {
+            throw new AssertionError("saveClaim threw an exception somehow.", exception);
+        }
+
+        Optional<Integer> result = claimsManager.getClaimCount(NULL_UUID);
+        if (result.isPresent()) {
+            assertEquals(result.get(), 1);
+        } else {
+            throw new AssertionError("Claim count was not cached somehow.");
+        }
+    }
+
 
 
     //
@@ -384,6 +485,11 @@ public class ClaimsManagerTest {
         @Override
         public Optional<Claim> getClaimByLocation(ChunkCoordinates location) {
             return Optional.empty();
+        }
+
+        @Override
+        public int getClaimCountOfUuid(UUID uuid) throws DaoException {
+            return 0;
         }
 
         @Override
