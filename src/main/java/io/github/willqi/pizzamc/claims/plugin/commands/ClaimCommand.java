@@ -11,12 +11,17 @@ import io.github.willqi.pizzamc.claims.plugin.events.ChunkUnclaimEvent;
 import io.github.willqi.pizzamc.claims.plugin.menus.types.ClaimFlagsType;
 import io.github.willqi.pizzamc.claims.plugin.menus.types.ClaimHelperSelectionMenuType;
 import org.bukkit.ChatColor;
+import org.bukkit.Chunk;
+import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.util.StringUtil;
 
 import java.util.*;
@@ -24,16 +29,54 @@ import java.util.logging.Level;
 
 public class ClaimCommand implements CommandExecutor, TabCompleter, Listener {
 
+    private static final int CLAIM_VIEW_CHUNK_RADIUS = 2;
+
     private static final String USAGE_MESSAGE = "Need help using /claim?\n" +
             "/claim add - Claim the chunk you are in\n" +
             "/claim remove - Unclaim the chunk you are in\n" +
             "/claim flags - View/modify the flags of your claim\n" +
-            "/claim helpers - View/modify the helpers of your claim";
+            "/claim helpers - View/modify the helpers of your claim\n" +
+            "/claim view - Toggle claim observation mode to see claim boundaries";
 
     private final ClaimsPlugin plugin;
 
+    private final Set<Player> claimViewers;
+
     public ClaimCommand (ClaimsPlugin plugin) {
         this.plugin = plugin;
+        this.claimViewers = new HashSet<>();
+        this.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(this.plugin, () -> {
+            for (Player player : this.claimViewers) {
+
+                for (int chunkX = player.getLocation().getChunk().getX() - CLAIM_VIEW_CHUNK_RADIUS; chunkX <= player.getLocation().getChunk().getX() + CLAIM_VIEW_CHUNK_RADIUS; chunkX++) {
+                    for (int chunkZ = player.getLocation().getChunk().getZ() - CLAIM_VIEW_CHUNK_RADIUS; chunkZ <= player.getLocation().getChunk().getZ() + CLAIM_VIEW_CHUNK_RADIUS; chunkZ++) {
+
+                        ChunkCoordinates coordinates = new ChunkCoordinates(player.getWorld().getUID(), chunkX, chunkZ);
+                        Optional<Claim> claim = this.plugin.getClaimsManager().getClaim(coordinates);
+                        if (claim.isPresent() && claim.get().getOwner().isPresent()) {
+
+                            Chunk chunk = player.getWorld().getChunkAt(chunkX, chunkZ);
+                            boolean ourChunk = claim.get().getOwner().get().equals(player.getUniqueId());
+                            renderClaimBoundaries(player, chunk, ourChunk);
+
+                        }
+
+                    }
+                }
+
+            }
+        }, 0, 60);
+    }
+
+    private static void renderClaimBoundaries(Player player, Chunk chunk, boolean ourChunk) {
+        for (int i = 0; i < 16; i += 2) {
+            double y = player.getLocation().getY() + 2;
+            Particle particle = ourChunk ? Particle.HEART : Particle.VILLAGER_ANGRY;
+            player.spawnParticle(particle, new Location(chunk.getWorld(), chunk.getX() * 16 + i, y, chunk.getZ() * 16), 0);
+            player.spawnParticle(particle, new Location(chunk.getWorld(), chunk.getX() * 16, y, chunk.getZ() * 16 + i), 0);
+            player.spawnParticle(particle, new Location(chunk.getWorld(), chunk.getX() * 16 + i, y, chunk.getZ() * 16 + 16), 0);
+            player.spawnParticle(particle, new Location(chunk.getWorld(), chunk.getX() * 16 + 16, y, chunk.getZ() * 16 + i), 0);
+        }
     }
 
     @Override
@@ -182,6 +225,24 @@ public class ClaimCommand implements CommandExecutor, TabCompleter, Listener {
                 helpersParams.put("page", 1);
                 this.plugin.getMenuManager().showMenu(player, ClaimHelperSelectionMenuType.ID, helpersParams);
                 break;
+
+
+            case "view":
+                if (!player.hasPermission(Permissions.CAN_CLAIM_LAND_AND_USE_COMMAND) && !playerIsClaimAdmin) {
+                    player.sendMessage(Utility.NO_PERMISSIONS_MESSAGE);
+                    return true;
+                }
+
+                if (this.claimViewers.contains(player)) {
+                    this.claimViewers.remove(player);
+                    player.sendMessage(Utility.formatResponse("Claims", "You are no longer viewing the boundaries of claims!", ChatColor.GREEN));
+                } else {
+                    this.claimViewers.add(player);
+                    player.sendMessage(Utility.formatResponse("Claims", "You can now view the boundaries of claims!", ChatColor.GREEN));
+                }
+                break;
+
+
             default:
                 player.sendMessage(Utility.formatResponse("Claims", USAGE_MESSAGE));
                 break;
@@ -199,10 +260,16 @@ public class ClaimCommand implements CommandExecutor, TabCompleter, Listener {
             List<String> options = new ArrayList<>();
             if (args.length == 1) {
                 Collections.sort(
-                        StringUtil.copyPartialMatches(args[0], Arrays.asList("add", "remove", "flags", "helpers"), options)
+                        StringUtil.copyPartialMatches(args[0], Arrays.asList("add", "remove", "flags", "helpers", "view"), options)
                 );
             }
             return options;
         }
     }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        this.claimViewers.remove(event.getPlayer());
+    }
+
 }
