@@ -9,12 +9,15 @@ import io.github.willqi.pizzamc.claims.plugin.Utility;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.ChunkUnloadEvent;
 
@@ -28,6 +31,10 @@ public class ClaimListener implements Listener {
     public ClaimListener(ClaimsPlugin plugin) {
         this.plugin = plugin;
     }
+
+    //
+    //  DATA LOADING EVENT LISTENERS
+    //
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -59,7 +66,89 @@ public class ClaimListener implements Listener {
         this.plugin.getClaimsManager().removeClaimFromCache(new ChunkCoordinates(event.getChunk().getWorld().getUID(), event.getChunk().getX(), event.getChunk().getZ()));
     }
 
+    private void handlePlayerMovementEvent(PlayerMoveEvent event) {
+        Chunk currentChunk = event.getTo().getChunk();
+        Chunk previousChunk = event.getFrom().getChunk();
+        if ((currentChunk.getX() != previousChunk.getX()) || (currentChunk.getZ() != previousChunk.getZ())) {
+            this.requestChunksAround(event.getTo());
+        }
+    }
 
+    private void requestChunksAround(Location location) {
+        Chunk chunk = location.getChunk();
+        for (int x = chunk.getX() - 1; x <= chunk.getX() + 1; x++) {
+            for (int z = chunk.getZ() - 1; z <= chunk.getZ() + 1; z++) {
+                this.plugin.getClaimsManager().fetchClaim(new ChunkCoordinates(chunk.getWorld().getUID(), x, z)).whenComplete((claim, exception) -> {
+                    if (exception != null) {
+                        this.plugin.getLogger().log(Level.SEVERE, "An exception occurred while loading a claim chunk", exception);
+                    }
+                });
+            }
+        }
+    }
+
+
+    //
+    // CLAIM FLAGS EVENT LISTENERS
+    //
+
+    @EventHandler
+    public void onPlayerEnterClaim(PlayerMoveEvent event) {
+        // Handle ALWAYS_DAY flag
+        Chunk currentChunk = event.getTo().getChunk();
+        Chunk previousChunk = event.getFrom().getChunk();
+        if ((currentChunk.getX() != previousChunk.getX()) || (currentChunk.getZ() != previousChunk.getZ())) {
+
+            ChunkCoordinates currentCoordinates = new ChunkCoordinates(
+                    currentChunk.getWorld().getUID(),
+                    currentChunk.getX(),
+                    currentChunk.getZ()
+            );
+            Optional<Claim> currentChunkClaim = this.plugin.getClaimsManager().getClaim(currentCoordinates);
+            if (currentChunkClaim.isPresent() && currentChunkClaim.get().hasFlag(Claim.Flag.ALWAYS_DAY)) {
+                event.getPlayer().setPlayerTime(1000, false);
+            } else {
+                event.getPlayer().resetPlayerTime();
+            }
+
+        }
+    }
+
+    @EventHandler
+    public void onMobSpawn(EntitySpawnEvent event) {
+        if ((!(event.getEntity() instanceof Player)) && (event.getEntity() instanceof LivingEntity)) {
+            ChunkCoordinates coordinates = new ChunkCoordinates(
+                    event.getLocation().getWorld().getUID(),
+                    event.getLocation().getChunk().getX(),
+                    event.getLocation().getChunk().getZ()
+            );
+            Optional<Claim> claim = this.plugin.getClaimsManager().getClaim(coordinates);
+            if (claim.isPresent() && claim.get().hasFlag(Claim.Flag.DISABLE_MOB_SPAWNING)) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPVP(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player && event.getDamager() instanceof Player) {
+            ChunkCoordinates coordinates = new ChunkCoordinates(
+                    event.getEntity().getWorld().getUID(),
+                    event.getEntity().getLocation().getChunk().getX(),
+                    event.getEntity().getLocation().getChunk().getZ()
+            );
+            Optional<Claim> claim = this.plugin.getClaimsManager().getClaim(coordinates);
+            if (claim.isPresent() && claim.get().hasFlag(Claim.Flag.DENY_PVP)) {
+                event.getDamager().sendMessage(Utility.formatResponse("Claims", "This is a no PVP zone!", ChatColor.RED));
+                event.setCancelled(true);
+            }
+        }
+    }
+
+
+    //
+    //  BUILD AND INTERACT EVENT LISTENERS
+    //
 
     @EventHandler
     public void onClaimBlockPlace(BlockPlaceEvent event) {
@@ -153,6 +242,9 @@ public class ClaimListener implements Listener {
     }
 
 
+
+
+
     private PermissionState getPlayerInteractStateInChunk(Player player, Chunk chunk) {
         return this.getPlayerStateInChunkUsingHelperPermission(player, chunk, ClaimHelper.Permission.INTERACT);
     }
@@ -199,27 +291,6 @@ public class ClaimListener implements Listener {
         ALLOWED,
         DENIED,
         LOADING
-    }
-
-    private void handlePlayerMovementEvent(PlayerMoveEvent event) {
-        Chunk currentChunk = event.getTo().getChunk();
-        Chunk previousChunk = event.getFrom().getChunk();
-        if ((currentChunk.getX() != previousChunk.getX()) || (currentChunk.getZ() != previousChunk.getZ())) {
-            this.requestChunksAround(event.getTo());
-        }
-    }
-
-    private void requestChunksAround(Location location) {
-        Chunk chunk = location.getChunk();
-        for (int x = chunk.getX() - 1; x <= chunk.getX() + 1; x++) {
-            for (int z = chunk.getZ() - 1; z <= chunk.getZ() + 1; z++) {
-                this.plugin.getClaimsManager().fetchClaim(new ChunkCoordinates(chunk.getWorld().getUID(), x, z)).whenComplete((claim, exception) -> {
-                    if (exception != null) {
-                        this.plugin.getLogger().log(Level.SEVERE, "An exception occurred while loading a claim chunk", exception);
-                    }
-                });
-            }
-        }
     }
 
 }
