@@ -16,12 +16,13 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.bukkit.util.StringUtil;
 
 import java.util.*;
 import java.util.logging.Level;
 
-public class ClaimCommand implements CommandExecutor, TabCompleter {
+public class ClaimCommand implements CommandExecutor, TabCompleter, Listener {
 
     private static final String USAGE_MESSAGE = "Need help using /claim?\n" +
             "/claim add - Claim the chunk you are in\n" +
@@ -180,6 +181,9 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
                 helpersParams.put("claim", currentClaim.get());
                 helpersParams.put("page", 1);
                 this.plugin.getMenuManager().showMenu(player, ClaimHelperSelectionMenuType.ID, helpersParams);
+                break;
+            default:
+                player.sendMessage(Utility.formatResponse("Claims", USAGE_MESSAGE));
                 break;
         }
 

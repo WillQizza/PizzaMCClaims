@@ -97,6 +97,7 @@ public class ClaimsPlugin extends JavaPlugin {
         ClaimCommand claimCommand = new ClaimCommand(this);
         this.getCommand("claim").setExecutor(claimCommand);
         this.getCommand("claim").setTabCompleter(claimCommand);
+        this.getServer().getPluginManager().registerEvents(claimCommand, this);
     }
 
     private void registerMenuTypes() {

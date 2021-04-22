@@ -6,29 +6,14 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
 
-public class ChunkClaimEvent extends PlayerEvent implements Cancellable {
+public class ChunkClaimEvent extends ClaimEvent implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
 
-    private final Claim claim;
     private boolean cancelled;
 
     public ChunkClaimEvent(Player player, Claim claim) {
-        super(player);
-        this.claim = claim;
-    }
-
-    public Claim getClaim() {
-        return this.claim;
-    }
-
-    @Override
-    public HandlerList getHandlers() {
-        return handlers;
-    }
-
-    public static HandlerList getHandlerList() {
-        return handlers;
+        super(player, claim);
     }
 
     @Override
@@ -40,4 +25,14 @@ public class ChunkClaimEvent extends PlayerEvent implements Cancellable {
     public void setCancelled(boolean cancelled) {
         this.cancelled = cancelled;
     }
+
+    @Override
+    public HandlerList getHandlers() {
+        return handlers;
+    }
+
+    public static HandlerList getHandlerList() {
+        return handlers;
+    }
+
 }

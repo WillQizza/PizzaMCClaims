@@ -6,6 +6,9 @@ import io.github.willqi.pizzamc.claims.plugin.Utility;
 import io.github.willqi.pizzamc.claims.api.homes.Home;
 import io.github.willqi.pizzamc.claims.api.homes.HomesManager;
 import io.github.willqi.pizzamc.claims.api.exceptions.InvalidHomeNameException;
+import io.github.willqi.pizzamc.claims.plugin.events.HomeCreateEvent;
+import io.github.willqi.pizzamc.claims.plugin.events.HomeDeleteEvent;
+import io.github.willqi.pizzamc.claims.plugin.events.HomeTeleportEvent;
 import io.github.willqi.pizzamc.claims.plugin.menus.types.HomeInformationType;
 import io.github.willqi.pizzamc.claims.plugin.menus.types.HomeSelectionMenuType;
 import org.bukkit.ChatColor;
@@ -79,6 +82,13 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(Utility.formatResponse("Homes", "No home could be found by that name!", ChatColor.RED));
                     return true;
                 }
+
+                HomeTeleportEvent homeTeleportEvent = new HomeTeleportEvent(player, targetHome.get());
+                this.plugin.getServer().getPluginManager().callEvent(homeTeleportEvent);
+                if (homeTeleportEvent.isCancelled()) {
+                    return true;
+                }
+
                 player.teleport(
                         new Location(
                                 player.getServer().getWorld(targetHome.get().getWorldUuid()),
@@ -129,6 +139,12 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
+                HomeCreateEvent homeCreateEvent = new HomeCreateEvent(player, createdHome);
+                this.plugin.getServer().getPluginManager().callEvent(homeCreateEvent);
+                if (homeCreateEvent.isCancelled()) {
+                    return true;
+                }
+
                 homesManager.save(createdHome).whenCompleteAsync((v, exception) -> {
                     if (exception != null) {
                         exception.printStackTrace();
@@ -150,6 +166,12 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                 targetHome = homesManager.getHome(player.getUniqueId(), String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
                 if (!targetHome.isPresent()) {
                     player.sendMessage(Utility.formatResponse("Homes", "No home could be found by that name!", ChatColor.RED));
+                    return true;
+                }
+
+                HomeDeleteEvent homeDeleteEvent = new HomeDeleteEvent(player, targetHome.get());
+                this.plugin.getServer().getPluginManager().callEvent(homeDeleteEvent);
+                if (homeDeleteEvent.isCancelled()) {
                     return true;
                 }
 
