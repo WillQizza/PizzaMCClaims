@@ -43,7 +43,9 @@ public class ClaimHelperLookUpType implements MenuType {
 
         ItemStack playerLookupItem = new ItemStack(Item.getById(339));
         NBTTagCompound tag = playerLookupItem.hasTag() ? playerLookupItem.getTag() : new NBTTagCompound();
-        tag.setString("display-name", "Type player name");
+        NBTTagCompound nameCompound = new NBTTagCompound();
+        nameCompound.setString("Name", "Type player name");
+        tag.set("display", nameCompound);
         playerLookupItem.setTag(tag);
 
         try {
