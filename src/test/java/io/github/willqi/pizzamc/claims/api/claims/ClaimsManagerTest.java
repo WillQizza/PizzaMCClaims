@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimsDao;
-import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimsHelperDao;
+import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimHelpersDao;
 import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +36,7 @@ public class ClaimsManagerTest {
 
         });
 
-        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimsHelperDao());
+        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimHelpersDao());
 
         try {
             claimsManager.fetchClaim(daoClaim.getCoordinates()).get();
@@ -61,7 +61,7 @@ public class ClaimsManagerTest {
 
         });
 
-        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimsHelperDao());
+        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimHelpersDao());
 
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
         try {
@@ -91,7 +91,7 @@ public class ClaimsManagerTest {
 
         });
 
-        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimsHelperDao());
+        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimHelpersDao());
         try {
             claimsManager.saveClaim(emptyClaim).get();
         } catch (InterruptedException | ExecutionException exception) {
@@ -120,7 +120,7 @@ public class ClaimsManagerTest {
 
         });
 
-        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimsHelperDao());
+        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimHelpersDao());
         try {
             claimsManager.saveClaim(daoClaim).get();
             daoClaim.setFlags(0);
@@ -144,7 +144,7 @@ public class ClaimsManagerTest {
 
         });
 
-        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimsHelperDao());
+        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimHelpersDao());
 
         try {
             claimsManager.saveClaim(daoClaim).get();    // Insert claim
@@ -170,7 +170,7 @@ public class ClaimsManagerTest {
 
         });
 
-        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimsHelperDao());
+        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimHelpersDao());
         try {
             claimsManager.saveClaim(daoClaim).get();
         } catch (InterruptedException | ExecutionException exception) {
@@ -191,7 +191,7 @@ public class ClaimsManagerTest {
                 return Optional.of(new Claim(location, 0));
             }
 
-        }, new TestClaimsHelperDao());
+        }, new TestClaimHelpersDao());
 
         // Check flags of fetched claim to ensure it is different
         try {
@@ -228,7 +228,7 @@ public class ClaimsManagerTest {
                 return 1;
             }
         });
-        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimsHelperDao());
+        ClaimsManager claimsManager = new ClaimsManager(mockClaimsDao, new TestClaimHelpersDao());
         try {
             int total = claimsManager.fetchClaimCount(NULL_UUID).get();
             assertEquals(total, 1);
@@ -247,7 +247,7 @@ public class ClaimsManagerTest {
 
     @Test
     public void addingClaimOwnerShouldIncrementClaimCountOfUuid() {
-        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimsHelperDao());
+        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimHelpersDao());
         try {
             claimsManager.fetchClaimCount(NULL_UUID).get();
 
@@ -275,7 +275,7 @@ public class ClaimsManagerTest {
 
     @Test
     public void removingClaimOwnerShouldDecrementClaimCountOfUuid() {
-        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimsHelperDao());
+        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimHelpersDao());
         try {
             claimsManager.fetchClaimCount(NULL_UUID).get();
 
@@ -299,7 +299,7 @@ public class ClaimsManagerTest {
 
     @Test
     public void updatingClaimFlagsShouldNotChangeClaimCountOfUuid() {
-        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimsHelperDao());
+        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimHelpersDao());
         try {
             claimsManager.fetchClaimCount(NULL_UUID).get();
 
@@ -329,7 +329,7 @@ public class ClaimsManagerTest {
 
     @Test
     public void fetchClaimHelpersShouldQueryDaoWithNoCacheData() throws DaoException {
-        ClaimsHelperDao mockHelpersDao = spy(new TestClaimsHelperDao());
+        ClaimHelpersDao mockHelpersDao = spy(new TestClaimHelpersDao());
         ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), mockHelpersDao);
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
 
@@ -347,7 +347,7 @@ public class ClaimsManagerTest {
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
         ClaimHelper daoHelper = new ClaimHelper(NULL_UUID, ClaimHelper.Permission.BUILD.getValue());
 
-        ClaimsHelperDao mockClaimsHelpersDao = spy(new TestClaimsHelperDao(){
+        ClaimHelpersDao mockClaimsHelpersDao = spy(new TestClaimHelpersDao(){
 
             @Override
             public Set<ClaimHelper> getClaimHelpersByLocation(ChunkCoordinates location) {
@@ -377,7 +377,7 @@ public class ClaimsManagerTest {
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
         ClaimHelper helper = new ClaimHelper(NULL_UUID, ClaimHelper.Permission.BUILD.getValue());
 
-        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimsHelperDao());
+        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimHelpersDao());
 
         // Check fetched claim helper's permission
         try {
@@ -406,9 +406,9 @@ public class ClaimsManagerTest {
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
         ClaimHelper helper = new ClaimHelper(NULL_UUID, ClaimHelper.Permission.BUILD.getValue());
 
-        ClaimsHelperDao mockClaimsHelperDao = spy(new TestClaimsHelperDao());
+        ClaimHelpersDao mockClaimHelpersDao = spy(new TestClaimHelpersDao());
 
-        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), mockClaimsHelperDao);
+        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), mockClaimHelpersDao);
         try {
             claimsManager.saveClaimHelper(coordinates, helper).get();
             helper.addPermission(ClaimHelper.Permission.INTERACT);
@@ -416,7 +416,7 @@ public class ClaimsManagerTest {
         } catch (InterruptedException | ExecutionException exception) {
             throw new AssertionError("saveClaimHelper threw an error somehow", exception);
         }
-        verify(mockClaimsHelperDao, times(1)).update(coordinates, helper);
+        verify(mockClaimHelpersDao, times(1)).update(coordinates, helper);
     }
 
     @Test
@@ -424,15 +424,15 @@ public class ClaimsManagerTest {
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
         ClaimHelper helper = new ClaimHelper(NULL_UUID, ClaimHelper.Permission.BUILD.getValue());
 
-        ClaimsHelperDao mockClaimsHelperDao = spy(new TestClaimsHelperDao());
+        ClaimHelpersDao mockClaimHelpersDao = spy(new TestClaimHelpersDao());
 
-        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), mockClaimsHelperDao);
+        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), mockClaimHelpersDao);
         try {
             claimsManager.saveClaimHelper(coordinates, helper).get();
         } catch (InterruptedException | ExecutionException exception) {
             throw new AssertionError("saveClaimHelper threw an error somehow", exception);
         }
-        verify(mockClaimsHelperDao, times(1)).insert(coordinates, helper);
+        verify(mockClaimHelpersDao, times(1)).insert(coordinates, helper);
     }
 
     @Test
@@ -440,16 +440,16 @@ public class ClaimsManagerTest {
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
         ClaimHelper helper = new ClaimHelper(NULL_UUID, 0);
 
-        ClaimsHelperDao mockClaimsHelperDao = spy(new TestClaimsHelperDao());
+        ClaimHelpersDao mockClaimHelpersDao = spy(new TestClaimHelpersDao());
 
-        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), mockClaimsHelperDao);
+        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), mockClaimHelpersDao);
         try {
             claimsManager.saveClaimHelper(coordinates, helper).get();
         } catch (InterruptedException | ExecutionException exception) {
             throw new AssertionError("saveClaimHelper threw an error somehow", exception);
         }
-        verify(mockClaimsHelperDao, times(0)).insert(coordinates, helper);
-        verify(mockClaimsHelperDao, times(0)).update(coordinates, helper);
+        verify(mockClaimHelpersDao, times(0)).insert(coordinates, helper);
+        verify(mockClaimHelpersDao, times(0)).update(coordinates, helper);
     }
 
     @Test
@@ -457,7 +457,7 @@ public class ClaimsManagerTest {
         ChunkCoordinates coordinates = new ChunkCoordinates(NULL_UUID, 0, 0);
         ClaimHelper helper = new ClaimHelper(NULL_UUID, 0);
 
-        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimsHelperDao());
+        ClaimsManager claimsManager = new ClaimsManager(new TestClaimsDao(), new TestClaimHelpersDao());
         try {
             claimsManager.saveClaimHelper(coordinates, helper).get();
             claimsManager.deleteClaim(new Claim(coordinates, 0)).get();
@@ -508,7 +508,7 @@ public class ClaimsManagerTest {
         }
     }
 
-    private static class TestClaimsHelperDao implements ClaimsHelperDao {
+    private static class TestClaimHelpersDao implements ClaimHelpersDao {
 
         @Override
         public Set<ClaimHelper> getClaimHelpersByLocation(ChunkCoordinates location) {

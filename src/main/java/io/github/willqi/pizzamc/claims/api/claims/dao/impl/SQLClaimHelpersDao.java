@@ -3,7 +3,7 @@ package io.github.willqi.pizzamc.claims.api.claims.dao.impl;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.willqi.pizzamc.claims.api.claims.ChunkCoordinates;
 import io.github.willqi.pizzamc.claims.api.claims.ClaimHelper;
-import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimsHelperDao;
+import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimHelpersDao;
 import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 
 import java.sql.*;
@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-public class SQLClaimsHelperDao implements ClaimsHelperDao {
+public class SQLClaimHelpersDao implements ClaimHelpersDao {
 
     private static final String STMT_CREATE_HELPERS_TABLE = "CREATE TABLE IF NOT EXISTS claim_helpers (" +
             "worldUuid VARCHAR(36) NOT NULL," +
@@ -29,7 +29,7 @@ public class SQLClaimsHelperDao implements ClaimsHelperDao {
 
     private final HikariDataSource source;
 
-    public SQLClaimsHelperDao(HikariDataSource source) throws SQLException {
+    public SQLClaimHelpersDao(HikariDataSource source) throws SQLException {
         this.source = source;
 
         Connection connection = null;

@@ -1,7 +1,7 @@
 package io.github.willqi.pizzamc.claims.api.claims;
 
 import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimsDao;
-import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimsHelperDao;
+import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimHelpersDao;
 import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 
 import java.util.*;
@@ -26,11 +26,11 @@ public class ClaimsManager {
     private final Map<UUID, CompletableFuture<Integer>> claimCountFutures;
 
     private final ClaimsDao claimsDao;
-    private final ClaimsHelperDao claimsHelperDao;
+    private final ClaimHelpersDao claimHelpersDao;
 
-    public ClaimsManager (ClaimsDao claimsDao, ClaimsHelperDao claimsHelperDao) {
+    public ClaimsManager (ClaimsDao claimsDao, ClaimHelpersDao claimHelpersDao) {
         this.claimsDao = claimsDao;
-        this.claimsHelperDao = claimsHelperDao;
+        this.claimHelpersDao = claimHelpersDao;
 
         this.claimsCache = new ConcurrentHashMap<>();
         this.helpersCache = new ConcurrentHashMap<>();
@@ -43,9 +43,9 @@ public class ClaimsManager {
 
 
     /**
-     * Fetch a claim from the database if it's not cached
+     * Fetch a claim from the ClaimsDao if it's not cached
      * @param coordinates
-     * @return the claim data
+     * @return CompletableFuture with a empty or existing claim
      */
     public CompletableFuture<Claim> fetchClaim(ChunkCoordinates coordinates) {
         Claim existingClaim = this.claimsCache.getOrDefault(coordinates, null);
@@ -76,7 +76,7 @@ public class ClaimsManager {
     /**
      * Get a claim from the cache if it is cached.
      * @param coordinates
-     * @return
+     * @return cached claim
      */
     public Optional<Claim> getClaim(ChunkCoordinates coordinates) {
         Claim claim = this.claimsCache.getOrDefault(coordinates, null);
@@ -87,6 +87,11 @@ public class ClaimsManager {
         }
     }
 
+    /**
+     * Save a claim to the ClaimsDao
+     * @param claim
+     * @return CompletableFuture that resolves after saving
+     */
     public CompletableFuture<Void> saveClaim(Claim claim) {
         return this.fetchClaim(claim.getCoordinates()).thenAcceptAsync(savedClaim -> {
             try {
@@ -105,6 +110,11 @@ public class ClaimsManager {
         });
     }
 
+    /**
+     * Request the ClaimsDao to delete the claim
+     * @param claim
+     * @return CompletableFuture that resolves after deleting
+     */
     public CompletableFuture<Void> deleteClaim(Claim claim) {
         return this.fetchClaimHelpers(claim.getCoordinates())
                 .thenAcceptAsync(helpers -> helpers.forEach(helper -> this.deleteClaimHelper(claim.getCoordinates(), helper)))
@@ -122,10 +132,11 @@ public class ClaimsManager {
     }
 
 
-
-
-
-
+    /**
+     * Fetch the claim helpers of a chunk from the ClaimHelpersDao
+     * @param coordinates
+     * @return CompletableFuture that resolves with the claim helpers of a chunk
+     */
     public CompletableFuture<Set<ClaimHelper>> fetchClaimHelpers(ChunkCoordinates coordinates) {
         Set<ClaimHelper> existingHelpers = this.helpersCache.getOrDefault(coordinates, null);
         if (existingHelpers != null) {
@@ -138,7 +149,7 @@ public class ClaimsManager {
                 returnedFuture = CompletableFuture.supplyAsync(() -> {
                     Set<ClaimHelper> helpers;
                     try {
-                        helpers = this.claimsHelperDao.getClaimHelpersByLocation(coordinates);
+                        helpers = this.claimHelpersDao.getClaimHelpersByLocation(coordinates);
                     } catch (DaoException exception) {
                         throw new CompletionException(exception);
                     }
@@ -154,11 +165,21 @@ public class ClaimsManager {
         }
     }
 
+    /**
+     * Remove the cached data for a claim.
+     * This will also clear claim helpers of a claim.
+     * @param coordinates
+     */
     public void removeClaimFromCache(ChunkCoordinates coordinates) {
         this.claimsCache.remove(coordinates);
         this.removeClaimHelpersFromCache(coordinates);
     }
 
+    /**
+     * Retrieve the cached claim helpers of a chunk.
+     * @param coordinates
+     * @return cached claim helpers
+     */
     public Optional<Set<ClaimHelper>> getClaimHelpers(ChunkCoordinates coordinates) {
         return Optional.ofNullable(this.helpersCache.getOrDefault(coordinates, null))
                 .map(helpers -> helpers.stream().map(ClaimHelper::clone).collect(Collectors.toSet()));
@@ -168,7 +189,7 @@ public class ClaimsManager {
      * Get a claim helper from the cache
      * @param coordinates
      * @param helperUuid
-     * @return Will return null if the claim helper does not exist or if no helpers have been fetched yet.
+     * @return Will return an empty optional if the claim helper does not exist or if no helpers have been fetched yet.
      */
     public Optional<ClaimHelper> getClaimHelper(ChunkCoordinates coordinates, UUID helperUuid) {
         Set<ClaimHelper> existingHelpers = this.helpersCache.getOrDefault(coordinates, null);
@@ -182,6 +203,12 @@ public class ClaimsManager {
         }
     }
 
+    /**
+     * Save a ClaimHelper to the ClaimHelpersDao
+     * @param coordinates
+     * @param helper
+     * @return a CompletableFuture that resolves after saving has finished.
+     */
     public CompletableFuture<Void> saveClaimHelper(ChunkCoordinates coordinates, ClaimHelper helper) {
         return this.fetchClaimHelpers(coordinates)
                 .thenAcceptAsync(savedHelpers -> {
@@ -190,12 +217,12 @@ public class ClaimsManager {
                             .findAny();
                     try {
                         if (savedHelper.isPresent()) {
-                            this.claimsHelperDao.update(coordinates, helper);
+                            this.claimHelpersDao.update(coordinates, helper);
                             savedHelper.get().setPermissions(helper.getPermissions());
                             this.helpersCache.put(coordinates, savedHelpers);
 
                         } else if (helper.getPermissions() != 0) {
-                            this.claimsHelperDao.insert(coordinates, helper);
+                            this.claimHelpersDao.insert(coordinates, helper);
                             savedHelpers.add(helper.clone());
                             this.helpersCache.put(coordinates, savedHelpers);
 
@@ -206,10 +233,16 @@ public class ClaimsManager {
                 });
     }
 
+    /**
+     * Request deletion of a ClaimHelper to the ClaimHelpersDao
+     * @param coordinates
+     * @param helper
+     * @return a CompletableFuture that resolves after deletion has finished
+     */
     public CompletableFuture<Void> deleteClaimHelper(ChunkCoordinates coordinates, ClaimHelper helper) {
         return CompletableFuture.runAsync(() -> {
             try {
-                this.claimsHelperDao.delete(coordinates, helper);
+                this.claimHelpersDao.delete(coordinates, helper);
             } catch (DaoException exception) {
                 throw new CompletionException(exception);
             }
@@ -220,11 +253,19 @@ public class ClaimsManager {
         });
     }
 
+    /**
+     * Remove all claim helpers cached for a coordinate
+     * @param coordinates
+     */
     public void removeClaimHelpersFromCache(ChunkCoordinates coordinates) {
         this.helpersCache.remove(coordinates);
     }
 
-
+    /**
+     * Retrieve the amount of claims a player has from the ClaimHelpersDao
+     * @param uuid
+     * @return the amount of claims a user has
+     */
     public CompletableFuture<Integer> fetchClaimCount(UUID uuid) {
         Integer count = this.claimCountCache.getOrDefault(uuid, null);
         if (count != null) {
@@ -250,14 +291,29 @@ public class ClaimsManager {
         }
     }
 
+    /**
+     * Retrieve the amount of claims a player has from the cache
+     * @param uuid
+     * @return cached claim count
+     */
     public Optional<Integer> getClaimCount(UUID uuid) {
         return Optional.ofNullable(this.claimCountCache.getOrDefault(uuid, null));
     }
 
+    /**
+     * Remove cached claim count for a player
+     * @param uuid
+     */
     public void removeClaimCountFromCache(UUID uuid) {
         this.claimCountCache.remove(uuid);
     }
 
+    /**
+     * Update the claim count of a player.
+     * Note: This will not update anything if the player's claim count was not fetched first
+     * @param oldClaim The old state of the claim being updated
+     * @param newClaim The new state of the claim being updated
+     */
     private void updateClaimCountCache(Claim oldClaim, Claim newClaim) {
         if (oldClaim.getOwner().isPresent() && !newClaim.getOwner().isPresent()) {
             // Removing owner from claim

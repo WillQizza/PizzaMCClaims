@@ -6,7 +6,10 @@ import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 
 import java.util.Set;
 
-public interface ClaimsHelperDao {
+/**
+ * Communicator between the ClaimManager and the database for claim helpers
+ */
+public interface ClaimHelpersDao {
 
     Set<ClaimHelper> getClaimHelpersByLocation(ChunkCoordinates location) throws DaoException;
 

@@ -90,6 +90,9 @@ public class Claim implements Cloneable {
         }
     }
 
+    /**
+     * Special modifiers for the claim
+     */
     public enum Flag {
         ALWAYS_DAY("Always Day", "Keep your claim always sunny!", generateValue(0)),       // Is it always day?
         DISABLE_MOB_SPAWNING("Disable Mob Spawning", "Disable mobs from spawning in your claim!", generateValue(1)),     // Can mobs spawn?

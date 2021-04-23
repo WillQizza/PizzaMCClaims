@@ -4,9 +4,9 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.pool.HikariPool;
 import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimsDao;
-import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimsHelperDao;
+import io.github.willqi.pizzamc.claims.api.claims.dao.ClaimHelpersDao;
 import io.github.willqi.pizzamc.claims.api.claims.dao.impl.SQLClaimsDao;
-import io.github.willqi.pizzamc.claims.api.claims.dao.impl.SQLClaimsHelperDao;
+import io.github.willqi.pizzamc.claims.api.claims.dao.impl.SQLClaimHelpersDao;
 import io.github.willqi.pizzamc.claims.api.exceptions.DaoException;
 import io.github.willqi.pizzamc.claims.api.homes.dao.HomesDao;
 import io.github.willqi.pizzamc.claims.api.homes.dao.impl.SQLHomesDao;
@@ -18,7 +18,7 @@ import java.sql.SQLException;
 public class SQLDaoSource implements DaoSource {
 
     private final ClaimsDao claimsDao;
-    private final ClaimsHelperDao claimsHelperDao;
+    private final ClaimHelpersDao claimHelpersDao;
     private final HomesDao homesDao;
     private final UsersDao usersDao;
 
@@ -37,7 +37,7 @@ public class SQLDaoSource implements DaoSource {
 
         try {
             this.claimsDao = new SQLClaimsDao(this.source);
-            this.claimsHelperDao = new SQLClaimsHelperDao(this.source);
+            this.claimHelpersDao = new SQLClaimHelpersDao(this.source);
             this.homesDao = new SQLHomesDao(this.source);
             this.usersDao = new SQLUsersDao(this.source);
         } catch (SQLException exception) {
@@ -51,8 +51,8 @@ public class SQLDaoSource implements DaoSource {
     }
 
     @Override
-    public ClaimsHelperDao getClaimsHelperDao() {
-        return this.claimsHelperDao;
+    public ClaimHelpersDao getClaimsHelperDao() {
+        return this.claimHelpersDao;
     }
 
     @Override

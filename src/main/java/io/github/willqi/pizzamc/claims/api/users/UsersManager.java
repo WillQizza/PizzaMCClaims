@@ -20,6 +20,11 @@ public class UsersManager {
         this.usersDao = usersDao;
     }
 
+    /**
+     * Fetch the stored user record of a uuid from the UsersDao
+     * @param uuid
+     * @return an empty optional if there is no record of the player yet or a user if one does exist.
+     */
     public CompletableFuture<Optional<User>> fetchUser(UUID uuid) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -30,6 +35,11 @@ public class UsersManager {
         });
     }
 
+    /**
+     * Fetch the stored user record of a name from the UsersDao
+     * @param name
+     * @return an empty optional if there is no record of the player yet or a user if one does exist.
+     */
     public CompletableFuture<Optional<User>> fetchUser(String name) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -40,6 +50,11 @@ public class UsersManager {
         });
     }
 
+    /**
+     * Save a user record to the UsersDao
+     * @param user
+     * @return a CompletableFuture that resolves after saving
+     */
     public CompletableFuture<Void> save(User user) {
         return this.fetchUser(user.getUuid()).thenAcceptAsync(results -> {
             try {

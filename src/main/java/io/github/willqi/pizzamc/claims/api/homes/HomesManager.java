@@ -8,6 +8,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Responsible for homes and handling interactions with the HomesDao
+ */
 public class HomesManager {
 
     private final Map<UUID, Map<String, Home>> cache;
@@ -24,6 +27,12 @@ public class HomesManager {
         this.queueHomeFutures = new ConcurrentHashMap<>();
     }
 
+    /**
+     * Fetch the homes of a user from the HomesDao
+     * This will use the cache if it is available
+     * @param playerUuid
+     * @return the homes of the player
+     */
     public CompletableFuture<Map<String, Home>> fetchHomes(UUID playerUuid) {
         Optional<Map<String, Home>> existingHomes = this.getHomes(playerUuid);
         if (existingHomes.isPresent()) {
@@ -59,6 +68,11 @@ public class HomesManager {
         }
     }
 
+    /**
+     * Get the cached homes of a player
+     * @param playerUuid
+     * @return the cached homes
+     */
     public Optional<Map<String, Home>> getHomes(UUID playerUuid) {
         Map<String, Home> cachedMap = this.cache.getOrDefault(playerUuid, null);
         if (cachedMap != null) {
@@ -70,6 +84,12 @@ public class HomesManager {
         }
     }
 
+    /**
+     * Get a specific home of a player if it exists
+     * @param ownerUuid
+     * @param name This is case sensitive
+     * @return an empty optional if the player's homes were not fetched or if the player does not have a home named that
+     */
     public Optional<Home> getHome (UUID ownerUuid, String name) {
         Optional<Map<String, Home>> homes = this.getHomes(ownerUuid);
         if (homes.isPresent()) {
@@ -79,6 +99,11 @@ public class HomesManager {
         }
     }
 
+    /**
+     * Save a home to the HomesDao
+     * @param home
+     * @return a CompletableFuture that resolves after saving
+     */
     public CompletableFuture<Void> save (Home home) {
         return this.fetchHomes(home.getOwnerUuid()).thenAcceptAsync(homes -> {
             Map<String, Home> cachedHomes = Optional.ofNullable(this.cache.getOrDefault(home.getOwnerUuid(), null)).orElseGet(ConcurrentHashMap::new);
@@ -97,6 +122,11 @@ public class HomesManager {
         });
     }
 
+    /**
+     * Request deletion of a home to the HomesDao
+     * @param home
+     * @return a CompletableFuture that resolves after deletion
+     */
     public CompletableFuture<Void> delete(Home home) {
         return CompletableFuture.runAsync(() -> {
             Map<String, Home> cachedHomes = this.cache.getOrDefault(home.getOwnerUuid(), null);
@@ -111,6 +141,10 @@ public class HomesManager {
         });
     }
 
+    /**
+     * Clear the homes cache of a player
+     * @param uuid
+     */
     public void clearHomesCache (UUID uuid) {
         this.cache.remove(uuid);
     }
