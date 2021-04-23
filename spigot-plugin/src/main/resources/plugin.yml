@@ -29,7 +29,7 @@ permissions:
     default: op
     description: Gives access to /claim flags
   pizzamcclaims.commands.claim.helpers:
-    default: op
+    default: true
     description: Gives access to all /claim helpers related commands
   pizzamcclaims.commands.claim.admin:
     default: op
