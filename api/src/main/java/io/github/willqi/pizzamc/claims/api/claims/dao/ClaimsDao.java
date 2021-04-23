@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Communicator between the ClaimManager and the database for claims
+ * Communicator between the ClaimManager and the database for io.github.willqi.pizzamc.claims
  */
 public interface ClaimsDao {
 
