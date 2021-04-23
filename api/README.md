@@ -13,7 +13,7 @@ In order to fully utilize the API, you will need an instance of the `ClaimsManag
 All three managers will require their respective daos in their constructors.
 These can be retrieved via a `DaoSource` object.
 
-Below are available sources available at the moment.
+Below are the sources available at the moment.
 
 | Class        | Description                                |
 | ------------ | ------------------------------------------ |
