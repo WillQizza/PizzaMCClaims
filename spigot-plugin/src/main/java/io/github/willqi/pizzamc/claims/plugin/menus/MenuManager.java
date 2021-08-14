@@ -18,6 +18,8 @@ public class MenuManager implements Listener {
         this.plugin = plugin;
         this.menuTypes = new HashMap<>();
         this.activePlayerMenus = new HashMap<>();
+
+        this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
     }
 
     public void register(String id, MenuType menuType) {

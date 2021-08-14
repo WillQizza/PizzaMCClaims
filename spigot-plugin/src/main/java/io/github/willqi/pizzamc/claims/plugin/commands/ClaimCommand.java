@@ -66,6 +66,8 @@ public class ClaimCommand implements CommandExecutor, TabCompleter, Listener {
 
             }
         }, 0, 60);
+
+        this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
     }
 
     private static void renderClaimBoundaries(Player player, Chunk chunk, boolean ourChunk) {

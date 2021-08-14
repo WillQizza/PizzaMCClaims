@@ -14,11 +14,12 @@ public class Utility {
 
     public static final String NO_PERMISSIONS_MESSAGE = formatResponse("Permissions", "You do not have permission to use this command.", ChatColor.RED);
 
-    public static String formatResponse (String header, String text) {
+
+    public static String formatResponse(String header, String text) {
         return String.format("%s%s> %s%s", HEADER_COLOR, header, TEXT_COLOR, text);
     }
 
-    public static String formatResponse (String header, String text, ChatColor color) {
+    public static String formatResponse(String header, String text, ChatColor color) {
         return String.format("%s%s> %s%s", HEADER_COLOR, header, color.toString(), text);
     }
 
