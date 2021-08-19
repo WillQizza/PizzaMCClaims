@@ -56,7 +56,7 @@ public class UsersManager {
      * @return a CompletableFuture that resolves after saving
      */
     public CompletableFuture<Void> save(User user) {
-        return this.fetchUser(user.getUuid()).thenAcceptAsync(results -> {
+        return this.fetchUser(user.getUUID()).thenAcceptAsync(results -> {
             try {
                 if (results.isPresent()) {
                     // Ensure we only update if needed

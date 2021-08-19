@@ -7,10 +7,10 @@ public class ChunkCoordinates {
 
     private final int x;
     private final int z;
-    private final UUID worldUuid;
+    private final UUID worldUUID;
 
-    public ChunkCoordinates(UUID worldUuid, int x, int z) {
-        this.worldUuid = worldUuid;
+    public ChunkCoordinates(UUID worldUUID, int x, int z) {
+        this.worldUUID = worldUUID;
         this.x = x;
         this.z = z;
     }
@@ -23,15 +23,15 @@ public class ChunkCoordinates {
         return this.z;
     }
 
-    public UUID getWorldUuid() {
-        return this.worldUuid;
+    public UUID getWorldUUID() {
+        return this.worldUUID;
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof ChunkCoordinates) {
             ChunkCoordinates otherObj = (ChunkCoordinates) obj;
-            return otherObj.getX() == this.getX() && otherObj.getZ() == this.getZ() && otherObj.getWorldUuid().equals(this.getWorldUuid());
+            return otherObj.getX() == this.getX() && otherObj.getZ() == this.getZ() && otherObj.getWorldUUID().equals(this.getWorldUUID());
         } else {
             return false;
         }
@@ -39,6 +39,6 @@ public class ChunkCoordinates {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.x, this.z, this.worldUuid);
+        return Objects.hash(this.x, this.z, this.worldUUID);
     }
 }

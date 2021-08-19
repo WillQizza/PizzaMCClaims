@@ -12,7 +12,7 @@ public class User implements Cloneable {
         this.name = name;
     }
 
-    public UUID getUuid() {
+    public UUID getUUID() {
         return this.uuid;
     }
 

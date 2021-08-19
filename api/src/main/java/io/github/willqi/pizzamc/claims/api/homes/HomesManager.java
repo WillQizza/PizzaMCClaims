@@ -105,8 +105,8 @@ public class HomesManager {
      * @return a CompletableFuture that resolves after saving
      */
     public CompletableFuture<Void> save (Home home) {
-        return this.fetchHomes(home.getOwnerUuid()).thenAcceptAsync(homes -> {
-            Map<String, Home> cachedHomes = Optional.ofNullable(this.cache.getOrDefault(home.getOwnerUuid(), null)).orElseGet(ConcurrentHashMap::new);
+        return this.fetchHomes(home.getOwnerUUID()).thenAcceptAsync(homes -> {
+            Map<String, Home> cachedHomes = Optional.ofNullable(this.cache.getOrDefault(home.getOwnerUUID(), null)).orElseGet(ConcurrentHashMap::new);
             try {
                 if (cachedHomes.containsKey(home.getName())) {
                     this.homesDao.update(home);
@@ -116,9 +116,9 @@ public class HomesManager {
             } catch (DaoException exception) {
                 throw new CompletionException(exception);
             }
-            cachedHomes = this.cache.getOrDefault(home.getOwnerUuid(), cachedHomes);
+            cachedHomes = this.cache.getOrDefault(home.getOwnerUUID(), cachedHomes);
             cachedHomes.put(home.getName(), home.clone());
-            this.cache.putIfAbsent(home.getOwnerUuid(), cachedHomes);
+            this.cache.putIfAbsent(home.getOwnerUUID(), cachedHomes);
         });
     }
 
@@ -129,7 +129,7 @@ public class HomesManager {
      */
     public CompletableFuture<Void> delete(Home home) {
         return CompletableFuture.runAsync(() -> {
-            Map<String, Home> cachedHomes = this.cache.getOrDefault(home.getOwnerUuid(), null);
+            Map<String, Home> cachedHomes = this.cache.getOrDefault(home.getOwnerUUID(), null);
             if (cachedHomes != null) {
                 cachedHomes.remove(home.getName());
             }

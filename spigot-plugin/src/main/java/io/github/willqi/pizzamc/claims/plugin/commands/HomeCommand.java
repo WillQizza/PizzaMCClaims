@@ -91,7 +91,7 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
 
                 player.teleport(
                         new Location(
-                                player.getServer().getWorld(targetHome.get().getWorldUuid()),
+                                player.getServer().getWorld(targetHome.get().getWorldUUID()),
                                 targetHome.get().getX(),
                                 targetHome.get().getY(),
                                 targetHome.get().getZ()

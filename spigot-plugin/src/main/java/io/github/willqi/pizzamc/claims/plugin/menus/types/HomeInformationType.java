@@ -79,7 +79,7 @@ public class HomeInformationType implements MenuType {
                         home.setX(player.getLocation().getX());
                         home.setY(player.getLocation().getY());
                         home.setZ(player.getLocation().getZ());
-                        home.setWorldUuid(player.getLocation().getWorld().getUID());
+                        home.setWorldUUID(player.getLocation().getWorld().getUID());
                         this.plugin.getHomesManager().save(home).whenComplete((v, exception) -> {
                             if (exception != null) {
                                 this.plugin.getLogger().log(Level.SEVERE, "An exception occured while trying to update a home's location.", exception);
@@ -95,7 +95,7 @@ public class HomeInformationType implements MenuType {
                         this.plugin.getMenuManager().closeMenu(player);
                         player.teleport(
                                 new Location(
-                                        player.getServer().getWorld(home.getWorldUuid()),
+                                        player.getServer().getWorld(home.getWorldUUID()),
                                         home.getX(),
                                         home.getY(),
                                         home.getZ()
@@ -157,7 +157,7 @@ public class HomeInformationType implements MenuType {
         meta.setDisplayName("" + ChatColor.RESET + ChatColor.LIGHT_PURPLE + "Teleport to " + home.getName());
         meta.setLore(
                 Collections.singletonList(
-                    "" + ChatColor.RESET + ChatColor.YELLOW + Bukkit.getWorld(home.getWorldUuid()).getName() +
+                    "" + ChatColor.RESET + ChatColor.YELLOW + Bukkit.getWorld(home.getWorldUUID()).getName() +
                     ChatColor.WHITE + " (" + ChatColor.YELLOW +
                     roundCoordinate(home.getX()) + ", " +
                     roundCoordinate(home.getY()) + ", " +

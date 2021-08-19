@@ -10,17 +10,17 @@ public class Home implements Cloneable {
     public static final int MAX_NAME_LENGTH = 50;
 
     private final String name;
-    private final UUID ownerUuid;
+    private final UUID ownerUUID;
 
     private double x;
     private double y;
     private double z;
-    private UUID worldUuid;
+    private UUID worldUUID;
 
-    public Home(UUID ownerUuid, String name, UUID worldUuid, double x, double y, double z) throws InvalidHomeNameException {
-        this.ownerUuid = ownerUuid;
+    public Home(UUID ownerUUID, String name, UUID worldUUID, double x, double y, double z) throws InvalidHomeNameException {
+        this.ownerUUID = ownerUUID;
         this.name = name;
-        this.worldUuid = worldUuid;
+        this.worldUUID = worldUUID;
         this.x = x;
         this.y = y;
         this.z = z;
@@ -30,11 +30,11 @@ public class Home implements Cloneable {
         }
     }
 
-    public UUID getWorldUuid() {
-        return worldUuid;
+    public UUID getWorldUUID() {
+        return this.worldUUID;
     }
-    public void setWorldUuid(UUID uuid) {
-        this.worldUuid = uuid;
+    public void setWorldUUID(UUID uuid) {
+        this.worldUUID = uuid;
     }
 
     public double getX() {
@@ -58,8 +58,8 @@ public class Home implements Cloneable {
         this.z = z;
     }
 
-    public UUID getOwnerUuid() {
-        return this.ownerUuid;
+    public UUID getOwnerUUID() {
+        return this.ownerUUID;
     }
     public String getName() {
         return this.name;
@@ -71,7 +71,7 @@ public class Home implements Cloneable {
             return (Home)super.clone();
         } catch (CloneNotSupportedException exception) {
             try {
-                return new Home(this.ownerUuid, this.name, this.worldUuid, this.x, this.y, this.z);
+                return new Home(this.ownerUUID, this.name, this.worldUUID, this.x, this.y, this.z);
             } catch (InvalidHomeNameException homeNameException) {
                 throw new AssertionError("Failed to clone new home. Unexpectedly threw invalid home name");
             }
@@ -80,14 +80,14 @@ public class Home implements Cloneable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.name, this.ownerUuid);
+        return Objects.hash(this.name, this.ownerUUID);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Home) {
             Home home = (Home)obj;
-            return home.getName().equals(this.getName()) && home.getOwnerUuid().equals(this.getOwnerUuid());
+            return home.getName().equals(this.getName()) && home.getOwnerUUID().equals(this.getOwnerUUID());
         } else {
             return false;
         }

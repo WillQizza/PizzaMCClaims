@@ -182,7 +182,7 @@ public class HomeSelectionMenuType implements MenuType {
         List<String> lore = new ArrayList<>();
         lore.add("" + ChatColor.RESET + ChatColor.AQUA + "Click to view details");
         lore.add(
-                "" + ChatColor.RESET + ChatColor.YELLOW + Bukkit.getWorld(home.getWorldUuid()).getName() +
+                "" + ChatColor.RESET + ChatColor.YELLOW + Bukkit.getWorld(home.getWorldUUID()).getName() +
                 ChatColor.WHITE + " (" + ChatColor.YELLOW +
                 roundCoordinate(home.getX()) + ", " +
                 roundCoordinate(home.getY()) + ", " +

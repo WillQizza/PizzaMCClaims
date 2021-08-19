@@ -107,7 +107,7 @@ public class ClaimHelperLookUpType implements MenuType {
                             player.sendMessage(Utility.formatResponse("Claims", "An exception has occurred!", ChatColor.RED));
                         } else {
                             if (user.isPresent()) {
-                                params.put("uuid", user.get().getUuid());
+                                params.put("uuid", user.get().getUUID());
                                 this.plugin.getMenuManager().showMenu(player, ClaimHelperFlagsType.ID, params);
                             } else {
                                 player.sendMessage(Utility.formatResponse("Claims", "That player does not exist or has not logged on the server yet!"));

@@ -14,18 +14,18 @@ import java.util.UUID;
 public class SQLClaimHelpersDao implements ClaimHelpersDao {
 
     private static final String STMT_CREATE_HELPERS_TABLE = "CREATE TABLE IF NOT EXISTS claim_helpers (" +
-            "worldUuid VARCHAR(36) NOT NULL," +
+            "world_uuid VARCHAR(36) NOT NULL," +
             "x INT NOT NULL," +
             "z INT NOT NULL," +
             "uuid VARCHAR(36) NOT NULL," +
             "permissions INT NOT NULL," +
-            "FOREIGN KEY(worldUuid, x, z) REFERENCES claims (worldUuid, x, z)" +
+            "FOREIGN KEY(world_uuid, x, z) REFERENCES claims (world_uuid, x, z)" +
             ")";
 
-    private static final String STMT_GET_HELPERS = "SELECT uuid, permissions FROM claim_helpers WHERE worldUuid=? AND x=? AND z=?";
-    private static final String STMT_INSERT_HELPER = "INSERT INTO claim_helpers (worldUuid, x, z, uuid, permissions) VALUES (?, ?, ?, ?, ?)";
-    private static final String STMT_UPDATE_HELPER = "UPDATE claim_helpers SET permissions=? WHERE worldUuid=? AND x=? AND z=? AND uuid=?";
-    private static final String STMT_DELETE_HELPER = "DELETE FROM claim_helpers WHERE worldUuid=? AND x=? AND z=? AND uuid=?";
+    private static final String STMT_GET_HELPERS = "SELECT uuid, permissions FROM claim_helpers WHERE world_uuid=? AND x=? AND z=?";
+    private static final String STMT_INSERT_HELPER = "INSERT INTO claim_helpers (world_uuid, x, z, uuid, permissions) VALUES (?, ?, ?, ?, ?)";
+    private static final String STMT_UPDATE_HELPER = "UPDATE claim_helpers SET permissions=? WHERE world_uuid=? AND x=? AND z=? AND uuid=?";
+    private static final String STMT_DELETE_HELPER = "DELETE FROM claim_helpers WHERE world_uuid=? AND x=? AND z=? AND uuid=?";
 
     private final HikariDataSource source;
 
@@ -60,7 +60,7 @@ public class SQLClaimHelpersDao implements ClaimHelpersDao {
         try {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_GET_HELPERS);
-            stmt.setString(1, location.getWorldUuid().toString());
+            stmt.setString(1, location.getWorldUUID().toString());
             stmt.setInt(2, location.getX());
             stmt.setInt(3, location.getZ());
             results = stmt.executeQuery();
@@ -96,7 +96,7 @@ public class SQLClaimHelpersDao implements ClaimHelpersDao {
         try {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_INSERT_HELPER);
-            stmt.setString(1, claimCoords.getWorldUuid().toString());
+            stmt.setString(1, claimCoords.getWorldUUID().toString());
             stmt.setInt(2, claimCoords.getX());
             stmt.setInt(3, claimCoords.getZ());
             stmt.setString(4, helper.getUuid().toString());
@@ -124,7 +124,7 @@ public class SQLClaimHelpersDao implements ClaimHelpersDao {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_UPDATE_HELPER);
             stmt.setInt(1, helper.getPermissions());
-            stmt.setString(2, claimCoords.getWorldUuid().toString());
+            stmt.setString(2, claimCoords.getWorldUUID().toString());
             stmt.setInt(3, claimCoords.getX());
             stmt.setInt(4, claimCoords.getZ());
             stmt.setString(5, helper.getUuid().toString());
@@ -150,7 +150,7 @@ public class SQLClaimHelpersDao implements ClaimHelpersDao {
         try {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_DELETE_HELPER);
-            stmt.setString(1, claimCoords.getWorldUuid().toString());
+            stmt.setString(1, claimCoords.getWorldUUID().toString());
             stmt.setInt(2, claimCoords.getX());
             stmt.setInt(3, claimCoords.getZ());
             stmt.setString(4, helper.getUuid().toString());

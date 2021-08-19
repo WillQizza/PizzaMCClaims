@@ -13,19 +13,19 @@ import java.util.UUID;
 public class SQLClaimsDao implements ClaimsDao {
 
     private static final String STMT_CREATE_CLAIMS_TABLE = "CREATE TABLE IF NOT EXISTS claims (" +
-            "worldUuid VARCHAR(36) NOT NULL," +
+            "world_uuid VARCHAR(36) NOT NULL," +
             "x INT NOT NULL," +
             "z INT NOT NULL," +
-            "ownerUuid VARCHAR(36)," +
+            "owner_uuid VARCHAR(36)," +
             "flags INT NOT NULL," +
-            "PRIMARY KEY(worldUuid, x, z)" +
+            "PRIMARY KEY(world_uuid, x, z)" +
             ")";
 
-    private static final String STMT_GET_CLAIM = "SELECT ownerUuid, flags FROM claims WHERE worldUuid=? AND x=? AND z=?";
-    private static final String STMT_GET_CLAIM_COUNT = "SELECT COUNT(1) AS total FROM claims WHERE ownerUuid=?";
-    private static final String STMT_INSERT_CLAIM = "INSERT INTO claims (worldUuid, x, z, ownerUuid, flags) VALUES (?, ?, ?, ?, ?)";
-    private static final String STMT_UPDATE_CLAIM = "UPDATE claims SET ownerUuid=?, flags=? WHERE worldUuid=? AND x=? AND z=?";
-    private static final String STMT_DELETE_CLAIM = "DELETE FROM claims WHERE worldUuid=? AND x=? AND z=?";
+    private static final String STMT_GET_CLAIM = "SELECT owner_uuid, flags FROM claims WHERE world_uuid=? AND x=? AND z=?";
+    private static final String STMT_GET_CLAIM_COUNT = "SELECT COUNT(1) AS total FROM claims WHERE owner_uuid=?";
+    private static final String STMT_INSERT_CLAIM = "INSERT INTO claims (world_uuid, x, z, owner_uuid, flags) VALUES (?, ?, ?, ?, ?)";
+    private static final String STMT_UPDATE_CLAIM = "UPDATE claims SET owner_uuid=?, flags=? WHERE world_uuid=? AND x=? AND z=?";
+    private static final String STMT_DELETE_CLAIM = "DELETE FROM claims WHERE world_uuid=? AND x=? AND z=?";
 
     private final HikariDataSource source;
 
@@ -59,17 +59,17 @@ public class SQLClaimsDao implements ClaimsDao {
         try {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_GET_CLAIM);
-            stmt.setString(1, coordinates.getWorldUuid().toString());
+            stmt.setString(1, coordinates.getWorldUUID().toString());
             stmt.setInt(2, coordinates.getX());
             stmt.setInt(3, coordinates.getZ());
             results = stmt.executeQuery();
 
             if (results.next()) {
-                UUID worldUuid = coordinates.getWorldUuid();
+                UUID worldUuid = coordinates.getWorldUUID();
                 int x = coordinates.getX();
                 int z = coordinates.getZ();
                 int flags = results.getInt("flags");
-                String ownerUuidStr = results.getString("ownerUuid");
+                String ownerUuidStr = results.getString("owner_uuid");
                 if (ownerUuidStr == null) {
                     claim = new Claim(new ChunkCoordinates(worldUuid, x, z), flags);
                 } else {
@@ -129,7 +129,7 @@ public class SQLClaimsDao implements ClaimsDao {
         try {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_INSERT_CLAIM);
-            stmt.setString(1, claim.getCoordinates().getWorldUuid().toString());
+            stmt.setString(1, claim.getCoordinates().getWorldUUID().toString());
             stmt.setInt(2, claim.getCoordinates().getX());
             stmt.setInt(3, claim.getCoordinates().getZ());
             Optional<UUID> claimOwner = claim.getOwner();
@@ -167,7 +167,7 @@ public class SQLClaimsDao implements ClaimsDao {
                 stmt.setString(1, null);
             }
             stmt.setInt(2, claim.getFlags());
-            stmt.setString(3, claim.getCoordinates().getWorldUuid().toString());
+            stmt.setString(3, claim.getCoordinates().getWorldUUID().toString());
             stmt.setInt(4, claim.getCoordinates().getX());
             stmt.setInt(5, claim.getCoordinates().getZ());
             stmt.execute();
@@ -191,7 +191,7 @@ public class SQLClaimsDao implements ClaimsDao {
         try {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_DELETE_CLAIM);
-            stmt.setString(1, claim.getCoordinates().getWorldUuid().toString());
+            stmt.setString(1, claim.getCoordinates().getWorldUUID().toString());
             stmt.setInt(2, claim.getCoordinates().getX());
             stmt.setInt(3, claim.getCoordinates().getZ());
             stmt.execute();

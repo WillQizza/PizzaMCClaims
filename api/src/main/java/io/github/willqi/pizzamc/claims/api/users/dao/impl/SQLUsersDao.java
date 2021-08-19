@@ -116,7 +116,7 @@ public class SQLUsersDao implements UsersDao {
         try {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_INSERT_USER);
-            stmt.setString(1, user.getUuid().toString());
+            stmt.setString(1, user.getUUID().toString());
             stmt.setString(2, user.getName());
             stmt.execute();
         } catch (SQLException exception) {
@@ -139,7 +139,7 @@ public class SQLUsersDao implements UsersDao {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_UPDATE_USER);
             stmt.setString(1, user.getName());
-            stmt.setString(2, user.getUuid().toString());
+            stmt.setString(2, user.getUUID().toString());
             stmt.execute();
         } catch (SQLException exception) {
             throw new DaoException(exception);
@@ -160,7 +160,7 @@ public class SQLUsersDao implements UsersDao {
         try {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_DELETE_USER);
-            stmt.setString(1, user.getUuid().toString());
+            stmt.setString(1, user.getUUID().toString());
             stmt.execute();
         } catch (SQLException exception) {
             throw new DaoException(exception);

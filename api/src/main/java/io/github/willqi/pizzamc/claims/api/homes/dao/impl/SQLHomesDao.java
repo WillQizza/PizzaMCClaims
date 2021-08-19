@@ -14,18 +14,18 @@ import java.util.UUID;
 public class SQLHomesDao implements HomesDao {
 
     private static final String STMT_CREATE_HOMES_TABLE = "CREATE TABLE IF NOT EXISTS homes (" +
-            "ownerUuid VARCHAR(36) NOT NULL," +
+            "owner_uuid VARCHAR(36) NOT NULL," +
             "name VARCHAR(" + Home.MAX_NAME_LENGTH + ") NOT NULL," +
-            "worldUuid VARCHAR(36) NOT NULL," +
+            "world_uuid VARCHAR(36) NOT NULL," +
             "x DOUBLE NOT NULL," +
             "y DOUBLE NOT NULL," +
             "z DOUBLE NOT NULL," +
-            "PRIMARY KEY(ownerUuid, name)" +
+            "PRIMARY KEY(owner_uuid, name)" +
             ")";
-    private static final String STMT_GET_HOMES = "SELECT ownerUuid, name, worldUuid, x, y, z FROM homes WHERE ownerUuid=?";
-    private static final String STMT_INSERT_HOME = "INSERT INTO homes (ownerUuid, name, worldUuid, x, y, z) VALUES (?, ?, ?, ?, ?, ?)";
-    private static final String STMT_UPDATE_HOME = "UPDATE homes SET worldUuid=?, x=?, y=?, z=? WHERE ownerUuid=? AND name=?";
-    private static final String STMT_DELETE_HOME = "DELETE FROM homes WHERE ownerUuid=? AND name=?";
+    private static final String STMT_GET_HOMES = "SELECT owner_uuid, name, world_uuid, x, y, z FROM homes WHERE owner_uuid=?";
+    private static final String STMT_INSERT_HOME = "INSERT INTO homes (owner_uuid, name, world_uuid, x, y, z) VALUES (?, ?, ?, ?, ?, ?)";
+    private static final String STMT_UPDATE_HOME = "UPDATE homes SET world_uuid=?, x=?, y=?, z=? WHERE owner_uuid=? AND name=?";
+    private static final String STMT_DELETE_HOME = "DELETE FROM homes WHERE owner_uuid=? AND name=?";
 
     private HikariDataSource source;
 
@@ -61,8 +61,8 @@ public class SQLHomesDao implements HomesDao {
             results = stmt.executeQuery();
 
             while (results.next()) {
-                UUID owner = UUID.fromString(results.getString("ownerUuid"));
-                UUID worldUuid = UUID.fromString(results.getString("worldUuid"));
+                UUID owner = UUID.fromString(results.getString("owner_uuid"));
+                UUID worldUuid = UUID.fromString(results.getString("world_uuid"));
                 String name = results.getString("name");
                 double x = results.getDouble("x");
                 double y = results.getDouble("y");
@@ -101,9 +101,9 @@ public class SQLHomesDao implements HomesDao {
         try {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_INSERT_HOME);
-            stmt.setString(1, home.getOwnerUuid().toString());
+            stmt.setString(1, home.getOwnerUUID().toString());
             stmt.setString(2, home.getName());
-            stmt.setString(3, home.getWorldUuid().toString());
+            stmt.setString(3, home.getWorldUUID().toString());
             stmt.setDouble(4, home.getX());
             stmt.setDouble(5, home.getY());
             stmt.setDouble(6, home.getZ());
@@ -129,11 +129,11 @@ public class SQLHomesDao implements HomesDao {
         try {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_UPDATE_HOME);
-            stmt.setString(1, home.getWorldUuid().toString());
+            stmt.setString(1, home.getWorldUUID().toString());
             stmt.setDouble(2, home.getX());
             stmt.setDouble(3, home.getY());
             stmt.setDouble(4, home.getZ());
-            stmt.setString(5, home.getOwnerUuid().toString());
+            stmt.setString(5, home.getOwnerUUID().toString());
             stmt.setString(6, home.getName());
             stmt.execute();
 
@@ -157,7 +157,7 @@ public class SQLHomesDao implements HomesDao {
         try {
             connection = this.source.getConnection();
             stmt = connection.prepareStatement(STMT_DELETE_HOME);
-            stmt.setString(1, home.getOwnerUuid().toString());
+            stmt.setString(1, home.getOwnerUUID().toString());
             stmt.setString(2, home.getName());
             stmt.execute();
 
