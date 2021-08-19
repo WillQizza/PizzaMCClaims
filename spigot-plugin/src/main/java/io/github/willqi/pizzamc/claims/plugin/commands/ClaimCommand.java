@@ -217,7 +217,7 @@ public class ClaimCommand implements CommandExecutor, TabCompleter, Listener {
                     return true;
                 }
 
-                if ((!currentClaim.get().getOwner().isPresent()) || (currentClaim.get().getOwner().get().equals(player.getUniqueId()) && !playerIsClaimAdmin)) {
+                if ((!currentClaim.get().getOwner().isPresent()) || (!currentClaim.get().getOwner().get().equals(player.getUniqueId()) && !playerIsClaimAdmin)) {
                     player.sendMessage(Utility.formatResponse("Claims", "Sorry, you do not own this claim.", ChatColor.RED));
                     return true;
                 }
