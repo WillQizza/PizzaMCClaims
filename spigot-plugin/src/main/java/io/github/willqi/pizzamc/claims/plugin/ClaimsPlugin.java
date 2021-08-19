@@ -10,6 +10,7 @@ import io.github.willqi.pizzamc.claims.plugin.commands.ClaimCommand;
 import io.github.willqi.pizzamc.claims.plugin.commands.HomeCommand;
 import io.github.willqi.pizzamc.claims.plugin.listeners.ClaimListener;
 import io.github.willqi.pizzamc.claims.plugin.listeners.HomeListener;
+import io.github.willqi.pizzamc.claims.plugin.listeners.UsersListener;
 import io.github.willqi.pizzamc.claims.plugin.menus.MenuManager;
 import io.github.willqi.pizzamc.claims.plugin.menus.types.*;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -85,6 +86,7 @@ public class ClaimsPlugin extends JavaPlugin {
     private void registerEvents() {
         this.getServer().getPluginManager().registerEvents(new HomeListener(this), this);
         this.getServer().getPluginManager().registerEvents(new ClaimListener(this), this);
+        this.getServer().getPluginManager().registerEvents(new UsersListener(this), this);
     }
 
     private void registerCommands() {
